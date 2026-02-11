@@ -9,6 +9,3 @@ pub use bbox::*;
 
 mod overpass;
 pub use overpass::*;
-
-mod recurse;
-pub use recurse::*;

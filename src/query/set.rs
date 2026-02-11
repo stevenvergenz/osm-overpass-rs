@@ -1,13 +1,13 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     fmt::{Display, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
 use crate::{
-    Bbox, Overpass, query::ReferencedByFilter
+    Bbox, Overpass,
 };
 use super::{
-    TagFilter, TagName, TagValue,
+    TagFilter,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -47,21 +47,19 @@ impl Display for QuerySetType {
 
 #[derive(Debug, Clone)]
 pub struct QuerySet<'i, 'f> {
-    pub output_type: QuerySetType,
+    pub content_type: QuerySetType,
     pub input: Option<&'i QuerySet<'i, 'f>>,
     pub tag_filters: HashSet<TagFilter<'f>>,
     pub bbox_filter: Option<Bbox>,
-    pub ref_filters: HashSet<ReferencedByFilter<'i, 'f>>,
 }
 
 impl Default for QuerySet<'_, '_> {
     fn default() -> Self {
         Self {
-            output_type: QuerySetType::Any,
+            content_type: QuerySetType::Any,
             input: None,
             tag_filters: HashSet::new(),
             bbox_filter: None,
-            ref_filters: HashSet::new(),
         }
     }
 }
@@ -77,63 +75,63 @@ impl<'i, 'f> QuerySet<'i, 'f> {
 impl<'i, 'f> QuerySet<'i, 'f> {
     pub fn nodes() -> Self {
         Self {
-            output_type: QuerySetType::Node,
+            content_type: QuerySetType::Node,
             ..Default::default()
         }
     }
 
     pub fn ways() -> Self {
         Self {
-            output_type: QuerySetType::Way,
+            content_type: QuerySetType::Way,
             ..Default::default()
         }
     }
     
     pub fn relations() -> Self {
         Self {
-            output_type: QuerySetType::Relation,
+            content_type: QuerySetType::Relation,
             ..Default::default()
         }
     }
     
     pub fn any_type() -> Self {
         Self {
-            output_type: QuerySetType::Any,
+            content_type: QuerySetType::Any,
             ..Default::default()
         }
     }
     
     pub fn nodes_or_ways() -> Self {
         Self {
-            output_type: QuerySetType::NodeOrWay,
+            content_type: QuerySetType::NodeOrWay,
             ..Default::default()
         }
     }
     
     pub fn nodes_or_relations() -> Self {
         Self {
-            output_type: QuerySetType::NodeOrRelation,
+            content_type: QuerySetType::NodeOrRelation,
             ..Default::default()
         }
     }
     
     pub fn ways_or_relations() -> Self {
         Self {
-            output_type: QuerySetType::WayOrRelation,
+            content_type: QuerySetType::WayOrRelation,
             ..Default::default()
         }
     }
     
     pub fn derived() -> Self {
         Self {
-            output_type: QuerySetType::Derived,
+            content_type: QuerySetType::Derived,
             ..Default::default()
         }
     }
     
     pub fn area() -> Self {
         Self {
-            output_type: QuerySetType::Area,
+            content_type: QuerySetType::Area,
             ..Default::default()
         }
     }
@@ -141,7 +139,7 @@ impl<'i, 'f> QuerySet<'i, 'f> {
 
 impl Overpass for QuerySet<'_, '_> {
     fn fmt_op(&self, f: &mut impl Write) -> FResult {
-        self.output_type.fmt_op(f)?;
+        self.content_type.fmt_op(f)?;
 
         if let Some(bbox) = self.bbox_filter {
             write!(f, "(")?;
