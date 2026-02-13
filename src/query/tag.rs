@@ -1,8 +1,8 @@
 use std::{
-    fmt::{Display, Result as FResult, Write},
+    fmt::{Display, Formatter, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
-use crate::{Overpass, QuerySet};
+use crate::{OverpassQL, OverpassQLError, QuerySet};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum TagMatcher<'a> {
@@ -15,40 +15,40 @@ pub enum TagMatcher<'a> {
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct TagName<'a>(TagMatcher<'a>);
 
-impl Overpass for TagName<'_> {
-    fn fmt_op(&self, f: &mut impl Write) -> FResult {
+impl OverpassQL for TagName<'_> {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self.0 {
-            TagMatcher::Exact(n) => write!(f, r#""{n}""#),
-            TagMatcher::NotExact(n) => write!(f, r#"!"{n}""#),
-            TagMatcher::Matching(n) => write!(f, r#"~"{n}""#),
+            TagMatcher::Exact(n) => write!(f, r#""{n}""#).map_err(OverpassQLError::from),
+            TagMatcher::NotExact(n) => write!(f, r#"!"{n}""#).map_err(OverpassQLError::from),
+            TagMatcher::Matching(n) => write!(f, r#"~"{n}""#).map_err(OverpassQLError::from),
             TagMatcher::NotMatching(_) => panic!("Tag names cannot be matched with inverted regular expressions"),
         }
     }
 }
 
 impl Display for TagName<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> FResult {
-        self.fmt_op(f)
+    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
+        self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TagValue<'a>(TagMatcher<'a>);
 
-impl Overpass for TagValue<'_> {
-    fn fmt_op(&self, f: &mut impl Write) -> FResult {
+impl OverpassQL for TagValue<'_> {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self.0 {
-            TagMatcher::Exact(n) => write!(f, r#"="{n}""#),
-            TagMatcher::NotExact(n) => write!(f, r#"!="{n}""#),
-            TagMatcher::Matching(n) => write!(f, r#"~"{n}""#),
-            TagMatcher::NotMatching(n) => write!(f, r#"!~"{n}""#),
+            TagMatcher::Exact(n) => write!(f, r#"="{n}""#).map_err(OverpassQLError::from),
+            TagMatcher::NotExact(n) => write!(f, r#"!="{n}""#).map_err(OverpassQLError::from),
+            TagMatcher::Matching(n) => write!(f, r#"~"{n}""#).map_err(OverpassQLError::from),
+            TagMatcher::NotMatching(n) => write!(f, r#"!~"{n}""#).map_err(OverpassQLError::from),
         }
     }
 }
 
 impl Display for TagValue<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> FResult {
-        self.fmt_op(f)
+        self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
@@ -68,20 +68,20 @@ impl<'a> TagFilter<'a> {
     }
 }
 
-impl Overpass for TagFilter<'_> {
-    fn fmt_op(&self, f: &mut impl Write) -> FResult {
-        write!(f, "[")?;
-        self.name.fmt_op(f)?;
+impl OverpassQL for TagFilter<'_> {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
+        write!(f, "[").map_err(OverpassQLError::from)?;
+        self.name.fmt_oql(f).map_err(OverpassQLError::from)?;
         if let Some(value) = self.value {
-            value.fmt_op(f)?;
+            value.fmt_oql(f).map_err(OverpassQLError::from)?;
         }
-        write!(f, "]")
+        write!(f, "]").map_err(OverpassQLError::from)
     }
 }
 
 impl Display for TagFilter<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> FResult {
-        self.fmt_op(f)
+        self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
@@ -164,23 +164,23 @@ mod test {
     #[test]
     fn name() {
         let n = TagName(TagMatcher::Exact("type"));
-        assert_eq!(n.to_overpass().as_str(), r#""type""#);
+        assert_eq!(n.to_oql().as_str(), r#""type""#);
         let n = TagName(TagMatcher::NotExact("type"));
-        assert_eq!(n.to_overpass().as_str(), r#"!"type""#);
+        assert_eq!(n.to_oql().as_str(), r#"!"type""#);
         let n = TagName(TagMatcher::Matching("type"));
-        assert_eq!(n.to_overpass().as_str(), r#"~"type""#);
+        assert_eq!(n.to_oql().as_str(), r#"~"type""#);
     }
 
     #[test]
     fn value() {
         let n = TagValue(TagMatcher::Exact("route"));
-        assert_eq!(n.to_overpass().as_str(), r#"="route""#);
+        assert_eq!(n.to_oql().as_str(), r#"="route""#);
         let n = TagValue(TagMatcher::NotExact("route"));
-        assert_eq!(n.to_overpass().as_str(), r#"!="route""#);
+        assert_eq!(n.to_oql().as_str(), r#"!="route""#);
         let n = TagValue(TagMatcher::Matching("route"));
-        assert_eq!(n.to_overpass().as_str(), r#"~"route""#);
+        assert_eq!(n.to_oql().as_str(), r#"~"route""#);
         let n = TagValue(TagMatcher::NotMatching("route"));
-        assert_eq!(n.to_overpass().as_str(), r#"!~"route""#);
+        assert_eq!(n.to_oql().as_str(), r#"!~"route""#);
     }
 
     #[test]
@@ -190,42 +190,42 @@ mod test {
             TagName(TagMatcher::Exact("type")), 
             TagValue(TagMatcher::Exact("route")),
         );
-        assert_eq!(f.to_overpass().as_str(), r#"["type"="route"]"#);
+        assert_eq!(f.to_oql().as_str(), r#"["type"="route"]"#);
 
         // not equals
         let f = TagFilter::new(
             TagName(TagMatcher::Exact("type")), 
             TagValue(TagMatcher::NotExact("route")),
         );
-        assert_eq!(f.to_overpass().as_str(), r#"["type"!="route"]"#);
+        assert_eq!(f.to_oql().as_str(), r#"["type"!="route"]"#);
 
         // exists
         let f = TagFilter::name(TagName(TagMatcher::Exact("type")));
-        assert_eq!(f.to_overpass().as_str(), r#"["type"]"#);
+        assert_eq!(f.to_oql().as_str(), r#"["type"]"#);
 
         // not exists
         let f = TagFilter::name(TagName(TagMatcher::NotExact("type")));
-        assert_eq!(f.to_overpass().as_str(), r#"[!"type"]"#);
+        assert_eq!(f.to_oql().as_str(), r#"[!"type"]"#);
 
         // value matches
         let f = TagFilter::new(
             TagName(TagMatcher::Exact("type")), 
             TagValue(TagMatcher::Matching("route")),
         );
-        assert_eq!(f.to_overpass().as_str(), r#"["type"~"route"]"#);
+        assert_eq!(f.to_oql().as_str(), r#"["type"~"route"]"#);
 
         // value not matches
         let f = TagFilter::new(
             TagName(TagMatcher::Exact("type")), 
             TagValue(TagMatcher::NotMatching("route")),
         );
-        assert_eq!(f.to_overpass().as_str(), r#"["type"!~"route"]"#);
+        assert_eq!(f.to_oql().as_str(), r#"["type"!~"route"]"#);
 
         // double matches
         let f = TagFilter::new(
             TagName(TagMatcher::Matching("type")), 
             TagValue(TagMatcher::Matching("route")),
         );
-        assert_eq!(f.to_overpass().as_str(), r#"[~"type"~"route"]"#);
+        assert_eq!(f.to_oql().as_str(), r#"[~"type"~"route"]"#);
     }
 }

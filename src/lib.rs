@@ -2,7 +2,7 @@ mod osm;
 pub use osm::*;
 
 mod query;
-pub use query::{QuerySet, Bbox, Overpass};
+pub use query::{QuerySet, Bbox, OverpassQL, OverpassQLError};
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

@@ -1,10 +1,11 @@
 use std::{
+    cell::RefCell,
     collections::HashSet,
-    fmt::{Display, Result as FResult, Write},
+    fmt::{Display, Formatter, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
 use crate::{
-    Bbox, Overpass,
+    Bbox, OverpassQL, OverpassQLError,
 };
 use super::{
     TagFilter,
@@ -23,25 +24,25 @@ pub enum QuerySetType {
     Area,
 }
 
-impl Overpass for QuerySetType {
-    fn fmt_op(&self, f: &mut impl Write) -> FResult {
+impl OverpassQL for QuerySetType {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
-            Self::Node => write!(f, "node"),
-            Self::Way => write!(f, "way"),
-            Self::Relation => write!(f, "relation"),
-            Self::Any => write!(f, "nwr"),
-            Self::NodeOrWay => write!(f, "nw"),
-            Self::NodeOrRelation => write!(f, "nr"),
-            Self::WayOrRelation => write!(f, "wr"),
-            Self::Derived => write!(f, "derived"),
-            Self::Area => write!(f, "area"),
+            Self::Node => write!(f, "node").map_err(OverpassQLError::from),
+            Self::Way => write!(f, "way").map_err(OverpassQLError::from),
+            Self::Relation => write!(f, "relation").map_err(OverpassQLError::from),
+            Self::Any => write!(f, "nwr").map_err(OverpassQLError::from),
+            Self::NodeOrWay => write!(f, "nw").map_err(OverpassQLError::from),
+            Self::NodeOrRelation => write!(f, "nr").map_err(OverpassQLError::from),
+            Self::WayOrRelation => write!(f, "wr").map_err(OverpassQLError::from),
+            Self::Derived => write!(f, "derived").map_err(OverpassQLError::from),
+            Self::Area => write!(f, "area").map_err(OverpassQLError::from),
         }
     }
 }
 
 impl Display for QuerySetType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> FResult {
-        self.fmt_op(f)
+    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
+        self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
@@ -51,6 +52,7 @@ pub struct QuerySet<'i, 'f> {
     pub input: Option<&'i QuerySet<'i, 'f>>,
     pub tag_filters: HashSet<TagFilter<'f>>,
     pub bbox_filter: Option<Bbox>,
+    pub id: RefCell<Option<String>>,
 }
 
 impl Default for QuerySet<'_, '_> {
@@ -60,6 +62,7 @@ impl Default for QuerySet<'_, '_> {
             input: None,
             tag_filters: HashSet::new(),
             bbox_filter: None,
+            id: RefCell::new(None),
         }
     }
 }
@@ -137,18 +140,27 @@ impl<'i, 'f> QuerySet<'i, 'f> {
     }
 }
 
-impl Overpass for QuerySet<'_, '_> {
-    fn fmt_op(&self, f: &mut impl Write) -> FResult {
-        self.content_type.fmt_op(f)?;
+impl OverpassQL for QuerySet<'_, '_> {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
+        self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
+
+        if let Some(input) = self.input
+        && let Some(id) = input.id.borrow().as_ref() {
+            write!(f, ".{id}").map_err(OverpassQLError::from)?;
+        }
 
         if let Some(bbox) = self.bbox_filter {
-            write!(f, "(")?;
-            bbox.fmt_op(f)?;
+            write!(f, "(").map_err(OverpassQLError::from)?;
+            bbox.fmt_oql(f)?;
             write!(f, ")")?;
         }
 
         for filter in self.tag_filters.iter() {
-            filter.fmt_op(f)?;
+            filter.fmt_oql(f)?;
+        }
+
+        if let Some(id) = self.id.borrow().as_ref() {
+            write!(f, "->.{id}").map_err(OverpassQLError::from)?;
         }
 
         Ok(())
@@ -156,8 +168,8 @@ impl Overpass for QuerySet<'_, '_> {
 }
 
 impl Display for QuerySet<'_, '_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> FResult {
-        self.fmt_op(f)
+    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
+        self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
@@ -181,6 +193,6 @@ mod test {
     #[test]
     fn basic() {
         let s = QuerySet::nodes().with_tag_values([("public_transport", "platform")]);
-        assert_eq!(s.to_overpass().as_str(), r#"node["public_transport"="platform"]"#);
+        assert_eq!(s.to_oql().as_str(), r#"node["public_transport"="platform"]"#);
     }
 }

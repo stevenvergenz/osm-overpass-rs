@@ -1,13 +1,39 @@
-use std::fmt::{Write, Result as FResult};
+use std::fmt::{Display, Formatter, Write, Result as FResult, Error as FmtError};
 
-pub trait Overpass {
-    fn fmt_op(&self, f: &mut impl Write) -> FResult;
+#[derive(Debug, Clone)]
+pub enum OverpassQLError {
+    Format,
+    CircularReference,
+}
+impl Display for OverpassQLError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
+        match self {
+            Self::Format => write!(f, "Format"),
+            Self::CircularReference => write!(f, "Circular reference"),
+        }
+    }
+}
+impl std::error::Error for OverpassQLError {}
 
-    fn to_overpass(&self) -> String {
+impl From<FmtError> for OverpassQLError {
+    fn from(_: FmtError) -> Self {
+        Self::Format
+    }
+}
+impl Into<FmtError> for OverpassQLError {
+    fn into(self) -> FmtError {
+        FmtError {}
+    }
+}
+
+pub trait OverpassQL {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError>;
+
+    fn to_oql(&self) -> String {
         let mut buf = String::new();
 
         // Bypass format_args!() to avoid write_str with zero-length strs
-        Overpass::fmt_op(self, &mut buf)
+        OverpassQL::fmt_oql(self, &mut buf)
             .expect("an Overpass implementation returned an error unexpectedly");
         buf
     }
