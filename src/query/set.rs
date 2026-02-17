@@ -1,11 +1,12 @@
 use std::{
+    borrow::Cow,
     cell::RefCell,
     collections::HashSet,
     fmt::{Display, Formatter, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
 use crate::{
-    Bbox, OverpassQL, OverpassQLError,
+    Bbox, OverpassQL, OverpassQLError, query::Query,
 };
 use super::{
     TagFilter,
@@ -49,7 +50,7 @@ impl Display for QuerySetType {
 #[derive(Debug, Clone)]
 pub struct QuerySet<'i, 'f> {
     pub content_type: QuerySetType,
-    pub input: Option<&'i QuerySet<'i, 'f>>,
+    pub input: Option<Box<Cow<'i, QuerySet<'i, 'f>>>>,
     pub tag_filters: HashSet<TagFilter<'f>>,
     pub bbox_filter: Option<Bbox>,
     pub id: RefCell<Option<String>>,
@@ -68,9 +69,16 @@ impl Default for QuerySet<'_, '_> {
 }
 
 impl<'i, 'f> QuerySet<'i, 'f> {
-    pub fn from(mut self, input: &'i QuerySet<'i, 'f>) -> Self {
-        self.input = Some(input);
+    pub fn from(mut self, input: impl Into<Cow<'i, QuerySet<'i, 'f>>>) -> Self {
+        self.input = Some(Box::new(input.into()));
         self
+    }
+
+    pub fn to_query(self) -> Query<'i, 'f> {
+        Query {
+            query_set: self,
+            ..Default::default()
+        }
     }
 }
 
@@ -144,7 +152,7 @@ impl OverpassQL for QuerySet<'_, '_> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
 
-        if let Some(input) = self.input
+        if let Some(input) = &self.input
         && let Some(id) = input.id.borrow().as_ref() {
             write!(f, ".{id}").map_err(OverpassQLError::from)?;
         }
@@ -183,6 +191,18 @@ impl Eq for QuerySet<'_, '_> {}
 impl Hash for QuerySet<'_, '_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         std::ptr::hash(self, state)
+    }
+}
+
+impl<'i, 'f> Into<Cow<'i, QuerySet<'i, 'f>>> for QuerySet<'i, 'f> {
+    fn into(self) -> Cow<'i, QuerySet<'i, 'f>> {
+        Cow::Owned(self)
+    }
+}
+
+impl<'i, 'f> Into<Cow<'i, QuerySet<'i, 'f>>> for &'i QuerySet<'i, 'f> {
+    fn into(self) -> Cow<'i, QuerySet<'i, 'f>> {
+        Cow::Borrowed(self)
     }
 }
 

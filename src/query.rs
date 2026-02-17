@@ -17,7 +17,7 @@ use std::{
 use chrono::{DateTime, Duration, Utc};
 
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Query<'i, 'f> {
     pub timeout: Option<Duration>,
     pub max_size: Option<u32>,
@@ -46,75 +46,72 @@ impl Iterator for NameIterator {
     }
 }
 
-impl Query<'_, '_> {
-    fn resolve_ordering<'a, 'i, 'f>(
-        query_set: &'i QuerySet<'i, 'f>,
-    ) -> Result<Vec<&'a QuerySet<'i, 'f>>, OverpassQLError>
-    where 'i: 'a {
-        // for {k: [v]}, v must be defined before k
-        let mut refs = HashMap::new();
-        let mut names = NameIterator::default();
-        Self::evaluate_refs_and_names(query_set, &mut names, &mut refs);
-        dbg!(&refs);
+fn resolve_ordering<'a, 'i, 'f>(query_set: &'a QuerySet<'i, 'f>) -> Result<Vec<&'a QuerySet<'i, 'f>>, OverpassQLError>
+where 'i: 'a {
+    // for {k: [v]}, v must be defined before k
+    let mut names = NameIterator::default();
+    let mut refs = evaluate_refs_and_names(query_set, &mut names, HashMap::new());
 
-        // for {k: [v]}, k must be defined before v
-        let mut back_refs = HashMap::new();
-        for (a, b) in refs.iter() {
-            for c in b {
-                back_refs.entry(*c).or_insert(HashSet::new()).insert(*a);
-            }
+    // for {k: [v]}, k must be defined before v
+    let mut back_refs = HashMap::new();
+    for (a, b) in refs.iter() {
+        for c in b {
+            back_refs.entry(*c).or_insert(HashSet::new()).insert(*a);
+        }
+    }
+
+    let mut output = vec![];
+
+    while refs.len() > 0 {
+        // find sets with no dependencies
+        let next_outputs = refs
+            .extract_if(|_, v| v.len() == 0)
+            .map(|(k, _)| k)
+            .collect::<Vec<_>>();
+
+        // fail if there aren't any
+        if next_outputs.len() == 0 {
+            return Err(OverpassQLError::CircularReference);
         }
 
-        let mut output = vec![];
+        for next in next_outputs {
+            println!("Outputting set {next}");
+            // output them first
+            output.push(next);
 
-        while refs.len() > 0 {
-            // find sets with no dependencies
-            let next_outputs = refs
-                .extract_if(|_, v| v.len() == 0)
-                .map(|(k, _)| k)
-                .collect::<Vec<_>>();
-
-            // fail if there aren't any
-            if next_outputs.len() == 0 {
-                return Err(OverpassQLError::CircularReference);
-            }
-
-            for next in next_outputs {
-                println!("Outputting set {next}");
-                // output them first
-                output.push(next);
-
-                // take them out of any reference list that contains them
-                if let Some(next_refs) = back_refs.remove(next) {
-                    for referent in next_refs.iter() {
-                        println!("Removing reference from {referent}");
-                        refs.get_mut(referent).unwrap().remove(next);
-                    }
+            // take them out of any reference list that contains them
+            if let Some(next_refs) = back_refs.remove(next) {
+                for referent in next_refs.iter() {
+                    println!("Removing reference from {referent}");
+                    refs.get_mut(referent).unwrap().remove(next);
                 }
-                
             }
-        }
-
-        Ok(output)
-    }
-
-    fn evaluate_refs_and_names<'a, 'i, 'f>(
-        set: &'i QuerySet<'i, 'f>, 
-        names: &mut NameIterator, 
-        refs: &'a mut HashMap<&'i QuerySet<'i, 'f>, HashSet<&'i QuerySet<'i, 'f>>>,
-    ) where 'i: 'a, 'f: 'a {
-        let deps = refs.entry(set).or_insert(HashSet::new());
-        if let Some(input) = set.input {
-            deps.insert(input);
-            if input.id.borrow().is_none() {
-                input.id.borrow_mut().replace(names.next().unwrap());
-                Self::evaluate_refs_and_names(input, names, refs);
-            }
+            
         }
     }
+
+    Ok(output)
 }
 
-impl OverpassQL for Query<'_, '_> {
+
+fn evaluate_refs_and_names<'a, 'i, 'f>(
+    set: &'a QuerySet<'i, 'f>, 
+    names: &mut NameIterator, 
+    mut refs: HashMap<&'a QuerySet<'i, 'f>, HashSet<&'a QuerySet<'i, 'f>>>,
+) -> HashMap<&'a QuerySet<'i, 'f>, HashSet<&'a QuerySet<'i, 'f>>>
+where 'i: 'a, 'f: 'a {
+    let deps = refs.entry(set).or_insert(HashSet::new());
+    if let Some(input) = &set.input {
+        deps.insert(input);
+        if input.id.borrow().is_none() {
+            input.id.borrow_mut().replace(names.next().unwrap());
+            refs = evaluate_refs_and_names(input, names, refs);
+        }
+    }
+    refs
+}
+
+impl<'i, 'f> OverpassQL for Query<'i, 'f> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         write!(f, "[out:json]").map_err(OverpassQLError::from)?;
         if let Some(d) = self.timeout {
@@ -139,7 +136,7 @@ impl OverpassQL for Query<'_, '_> {
             }
         }
 
-        for set in Self::resolve_ordering(&self.query_set)? {
+        for set in resolve_ordering(&self.query_set)? {
             set.fmt_oql(f)?;
             write!(f, ";").map_err(OverpassQLError::from)?;
         }
@@ -175,13 +172,18 @@ mod test {
     fn resolve_ordering() {
         let q1 = QuerySet::nodes_or_ways().with_tag_values([("public_transport", "platform")]);
         let q2 = QuerySet::nodes().from(&q1);
-        assert_eq!(Query::resolve_ordering(&q2).unwrap(), vec![&q1, &q2]);
+        assert_eq!(super::resolve_ordering(&q2).unwrap(), vec![&q1, &q2]);
     }
 
     #[test]
     fn fmt_oql() {
         let s1 = QuerySet::nodes_or_ways().with_tag_values([("public_transport", "platform")]);
         let s2 = QuerySet::nodes().from(&s1);
-        
+        assert_eq!(s2.to_query().to_oql(), vec![
+            "[out:json]",
+            r#"nw["public_transport"="platform"]->.a;"#,
+            "node.a;",
+            "out;"
+        ].join(""));
     }
 }
