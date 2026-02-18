@@ -92,8 +92,8 @@ impl Hash for TagFilter<'_> {
 }
 
 // value exact match
-impl<'i, 'f> QuerySet<'i, 'f> {
-    pub fn with_tag_value(mut self, tag: &'f str, tag_value: &'f str) -> Self {
+impl<'a> QuerySet<'a> {
+    pub fn with_tag_value(mut self, tag: &'a str, tag_value: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::new(
             TagName(TagMatcher::Exact(tag)), 
             TagValue(TagMatcher::Exact(tag_value)),
@@ -101,14 +101,14 @@ impl<'i, 'f> QuerySet<'i, 'f> {
         self
     }
 
-    pub fn with_tag_values(mut self, tags: impl IntoIterator<Item=(&'f str, &'f str)>) -> Self {
+    pub fn with_tag_values(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
         for (k, v) in tags.into_iter() {
             self = self.with_tag_value(k, v);
         }
         self
     }
 
-    pub fn without_tag_value(mut self, tag: &'f str, tag_value: &'f str) -> Self {
+    pub fn without_tag_value(mut self, tag: &'a str, tag_value: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::new(
             TagName(TagMatcher::Exact(tag)), 
             TagValue(TagMatcher::NotExact(tag_value)),
@@ -116,7 +116,7 @@ impl<'i, 'f> QuerySet<'i, 'f> {
         self
     }
 
-    pub fn without_tag_values(mut self, tags: impl IntoIterator<Item=(&'f str, &'f str)>) -> Self {
+    pub fn without_tag_values(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
         for (k, v) in tags.into_iter() {
             self = self.without_tag_value(k, v);
         }
@@ -125,25 +125,25 @@ impl<'i, 'f> QuerySet<'i, 'f> {
 }
 
 // exists
-impl<'i, 'f> QuerySet<'i, 'f> {
-    pub fn with_tag(mut self, tag: &'f str) -> Self {
+impl<'a> QuerySet<'a> {
+    pub fn with_tag(mut self, tag: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::name(TagName(TagMatcher::Exact(tag))));
         self
     }
 
-    pub fn with_tags(mut self, tags: impl IntoIterator<Item=&'f str>) -> Self {
+    pub fn with_tags(mut self, tags: impl IntoIterator<Item=&'a str>) -> Self {
         for tag in tags.into_iter() {
             self = self.with_tag(tag);
         }
         self
     }
 
-    pub fn without_tag(mut self, tag: &'f str) -> Self {
+    pub fn without_tag(mut self, tag: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::name(TagName(TagMatcher::NotExact(tag))));
         self
     }
 
-    pub fn without_tags(mut self, tags: impl IntoIterator<Item=&'f str>) -> Self {
+    pub fn without_tags(mut self, tags: impl IntoIterator<Item=&'a str>) -> Self {
         for tag in tags.into_iter() {
             self = self.without_tag(tag);
         }
@@ -152,8 +152,8 @@ impl<'i, 'f> QuerySet<'i, 'f> {
 }
 
 // value regex match
-impl<'i, 'f> QuerySet<'i, 'f> {
-    pub fn with_tag_value_matching(mut self, tag: &'f str, value_re: &'f str) -> Self {
+impl<'a> QuerySet<'a> {
+    pub fn with_tag_value_matching(mut self, tag: &'a str, value_re: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::new(
             TagName(TagMatcher::Exact(tag)), 
             TagValue(TagMatcher::Matching(value_re)),
@@ -161,14 +161,14 @@ impl<'i, 'f> QuerySet<'i, 'f> {
         self
     }
 
-    pub fn with_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'f str, &'f str)>) -> Self {
+    pub fn with_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
         for (k, v) in tags.into_iter() {
             self = self.with_tag_value_matching(k, v);
         }
         self
     }
 
-    pub fn without_tag_value_matching(mut self, tag: &'f str, value_re: &'f str) -> Self {
+    pub fn without_tag_value_matching(mut self, tag: &'a str, value_re: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::new(
             TagName(TagMatcher::Exact(tag)), 
             TagValue(TagMatcher::NotMatching(value_re)),
@@ -176,14 +176,14 @@ impl<'i, 'f> QuerySet<'i, 'f> {
         self
     }
 
-    pub fn without_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'f str, &'f str)>) -> Self {
+    pub fn without_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
         for (k, v) in tags.into_iter() {
             self = self.without_tag_value_matching(k, v);
         }
         self
     }
 
-    pub fn with_matching_tag_value_matching(mut self, tag_re: &'f str, value_re: &'f str) -> Self {
+    pub fn with_matching_tag_value_matching(mut self, tag_re: &'a str, value_re: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::new(
             TagName(TagMatcher::Matching(tag_re)), 
             TagValue(TagMatcher::Matching(value_re)),
@@ -191,7 +191,7 @@ impl<'i, 'f> QuerySet<'i, 'f> {
         self
     }
 
-    pub fn with_matching_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'f str, &'f str)>) -> Self {
+    pub fn with_matching_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
         for (k, v) in tags.into_iter() {
             self = self.with_matching_tag_value_matching(k, v);
         }

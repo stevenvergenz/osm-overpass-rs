@@ -11,7 +11,7 @@ mod overpassql;
 pub use overpassql::*;
 
 mod namer;
-pub use namer::*;
+pub(crate) use namer::Namer;
 
 use std::{
     collections::{HashMap, HashSet},
@@ -46,22 +46,21 @@ impl Display for QueryOutputFormat {
 }
 
 #[derive(Debug, Default)]
-pub struct Query<'input, 'filter> {
+pub struct Query<'a> {
     pub timeout: Option<Duration>,
     pub max_size: Option<u32>,
     pub global_bbox: Option<Bbox>,
     pub as_of_date: Option<DateTime<Utc>>,
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
-    pub query_set: QuerySet<'input, 'filter>,
+    pub query_set: QuerySet<'a>,
     pub output_format: QueryOutputFormat,
 }
 
-fn resolve_ordering<'a, 'input, 'filter>(query_set: &'a QuerySet<'input, 'filter>)
--> Result<Vec<&'a QuerySet<'input, 'filter>>, OverpassQLError>
-where 'input: 'a {
+fn resolve_ordering<'a, 'b>(query_set: &'b QuerySet<'a>)
+-> Result<Vec<&'b QuerySet<'a>>, OverpassQLError>
+where 'a: 'b {
     // for {k: [v]}, v must be defined before k
-    let mut names = Namer::new();
-    let mut refs = evaluate_refs_and_names(query_set, &mut names, HashMap::new());
+    let mut refs = evaluate_refs(query_set, HashMap::new());
 
     // for {k: [v]}, k must be defined before v
     let mut back_refs = HashMap::new();
@@ -105,20 +104,19 @@ where 'input: 'a {
 }
 
 
-fn evaluate_refs_and_names<'a, 'i, 'f>(
-    set: &'a QuerySet<'i, 'f>, 
-    names: &mut Namer, 
-    mut refs: HashMap<&'a QuerySet<'i, 'f>, HashSet<&'a QuerySet<'i, 'f>>>,
-) -> HashMap<&'a QuerySet<'i, 'f>, HashSet<&'a QuerySet<'i, 'f>>>
-where 'i: 'a, 'f: 'a {
+fn evaluate_refs<'a, 'b>(
+    set: &'b QuerySet<'a>, 
+    mut refs: HashMap<&'b QuerySet<'a>, HashSet<&'b QuerySet<'a>>>,
+) -> HashMap<&'b QuerySet<'a>, HashSet<&'b QuerySet<'a>>>
+where 'a: 'b {
     let deps = refs.entry(set).or_insert(HashSet::new());
     if let Some(input) = &set.input && deps.insert(input) {
-        refs = evaluate_refs_and_names(input, names, refs);
+        refs = evaluate_refs(input, refs);
     }
     refs
 }
 
-impl<'input, 'filter> OverpassQL for Query<'input, 'filter> {
+impl<'a> OverpassQL for Query<'a> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         if let Some(d) = self.timeout {
             write!(f, "[timeout:{}]", d.as_seconds_f32() as u16).map_err(OverpassQLError::from)?;
@@ -143,8 +141,7 @@ impl<'input, 'filter> OverpassQL for Query<'input, 'filter> {
         }
         write!(f, "[out:json];").map_err(OverpassQLError::from)?;
 
-        let mut namer = Namer::new();
-        namer.assign(&self.query_set, None);
+        let mut namer = Namer::new(&self.query_set);
         for set in resolve_ordering(&self.query_set)? {
             set.fmt_oql_named(f, &mut namer)?;
             write!(f, ";").map_err(OverpassQLError::from)?;
@@ -154,7 +151,7 @@ impl<'input, 'filter> OverpassQL for Query<'input, 'filter> {
     }
 }
 
-impl Display for Query<'_, '_> {
+impl Display for Query<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
         self.fmt_oql(f).map_err(OverpassQLError::into)
     }

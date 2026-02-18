@@ -44,15 +44,15 @@ impl Display for QuerySetType {
 }
 
 #[derive(Debug, Clone)]
-pub struct QuerySet<'input, 'filter> {
+pub struct QuerySet<'a> {
     pub content_type: QuerySetType,
-    pub input: Option<Box<Cow<'input, QuerySet<'input, 'filter>>>>,
+    pub input: Option<Box<Cow<'a, QuerySet<'a>>>>,
     pub id_filters: HashSet<i64>,
-    pub tag_filters: HashSet<TagFilter<'filter>>,
+    pub tag_filters: HashSet<TagFilter<'a>>,
     pub bbox_filter: Option<Bbox>,
 }
 
-impl Default for QuerySet<'_, '_> {
+impl Default for QuerySet<'_> {
     fn default() -> Self {
         Self {
             content_type: QuerySetType::Any,
@@ -64,13 +64,13 @@ impl Default for QuerySet<'_, '_> {
     }
 }
 
-impl<'input, 'filter> QuerySet<'input, 'filter> {
-    pub fn from(mut self, input: impl Into<Cow<'input, QuerySet<'input, 'filter>>>) -> Self {
+impl<'a> QuerySet<'a> {
+    pub fn from(mut self, input: impl Into<Cow<'a, QuerySet<'a>>>) -> Self {
         self.input = Some(Box::new(input.into()));
         self
     }
 
-    pub fn to_query(self) -> Query<'input, 'filter> {
+    pub fn to_query(self) -> Query<'a> {
         Query {
             query_set: self,
             ..Default::default()
@@ -91,7 +91,7 @@ impl<'input, 'filter> QuerySet<'input, 'filter> {
 }
 
 /// constructors
-impl<'input, 'filter> QuerySet<'input, 'filter> {
+impl QuerySet<'_> {
     pub fn nodes() -> Self {
         Self {
             content_type: QuerySetType::Node,
@@ -156,7 +156,7 @@ impl<'input, 'filter> QuerySet<'input, 'filter> {
     }
 }
 
-impl<'input, 'filter> QuerySet<'input, 'filter> {
+impl<'a> QuerySet<'a> {
     fn fmt_filters(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         if self.id_filters.len() > 0 {
             let mut iter = self.id_filters.iter();
@@ -180,11 +180,11 @@ impl<'input, 'filter> QuerySet<'input, 'filter> {
         Ok(())
     }
 
-    pub(crate) fn fmt_oql_named<'s>(&'s self,
+    pub(crate) fn fmt_oql_named<'b>(&'b self,
         f: &mut impl Write,
-        namer: &'s mut Namer<'s, 'input, 'filter>,
+        namer: &'b mut Namer<'a, 'b>,
     ) -> Result<(), OverpassQLError>
-    where 's: 'input {
+    where 'a: 'b {
         self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
 
         if let Some(input) = &self.input
@@ -202,7 +202,7 @@ impl<'input, 'filter> QuerySet<'input, 'filter> {
     }
 }
 
-impl OverpassQL for QuerySet<'_, '_> {
+impl OverpassQL for QuerySet<'_> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
 
@@ -212,33 +212,33 @@ impl OverpassQL for QuerySet<'_, '_> {
     }
 }
 
-impl Display for QuerySet<'_, '_> {
+impl Display for QuerySet<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
         self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
-impl PartialEq for QuerySet<'_, '_> {
+impl PartialEq for QuerySet<'_> {
     fn eq(&self, other: &Self) -> bool {
         std::ptr::eq(self, other)
     }
 }
-impl Eq for QuerySet<'_, '_> {}
+impl Eq for QuerySet<'_> {}
 
-impl Hash for QuerySet<'_, '_> {
+impl Hash for QuerySet<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         std::ptr::hash(self, state)
     }
 }
 
-impl<'i, 'f> Into<Cow<'i, QuerySet<'i, 'f>>> for QuerySet<'i, 'f> {
-    fn into(self) -> Cow<'i, QuerySet<'i, 'f>> {
+impl<'a> Into<Cow<'a, QuerySet<'a>>> for QuerySet<'a> {
+    fn into(self) -> Cow<'a, QuerySet<'a>> {
         Cow::Owned(self)
     }
 }
 
-impl<'i, 'f> Into<Cow<'i, QuerySet<'i, 'f>>> for &'i QuerySet<'i, 'f> {
-    fn into(self) -> Cow<'i, QuerySet<'i, 'f>> {
+impl<'a> Into<Cow<'a, QuerySet<'a>>> for &'a QuerySet<'a> {
+    fn into(self) -> Cow<'a, QuerySet<'a>> {
         Cow::Borrowed(self)
     }
 }

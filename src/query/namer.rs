@@ -2,24 +2,20 @@ use std::collections::HashMap;
 use crate::QuerySet;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Namer<'named, 'input, 'filter> where 'input: 'named, 'filter: 'named {
+pub(crate) struct Namer<'a, 'b> where 'a: 'b {
     iter: NameIterator,
-    names: HashMap<&'named QuerySet<'input, 'filter>, Option<String>>,
+    names: HashMap<&'b QuerySet<'a>, Option<String>>,
 }
 
-impl<'o, 'i, 'f> Namer<'o, 'i, 'f> {
-    pub fn new() -> Self {
+impl<'a, 'b> Namer<'a, 'b> {
+    pub fn new(init: &'b QuerySet<'a>) -> Self {
         Self {
             iter: NameIterator { sequence_index: 0 },
-            names: HashMap::new(),
+            names: HashMap::from([(init, None)]),
         }
     }
 
-    pub fn assign(&mut self, item: &'i QuerySet<'i, 'f>, name: Option<String>) {
-        self.names.insert(item, name);
-    }
-
-    pub fn get_or_assign(&mut self, item: &'i QuerySet<'i, 'f>) -> Option<&str> {
+    pub fn get_or_assign(&mut self, item: &'a QuerySet<'a>) -> Option<&str> {
         self.names.entry(item)
             .or_insert_with(|| self.iter.next())
             .as_ref().map(|s| s.as_str())

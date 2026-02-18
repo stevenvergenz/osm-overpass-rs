@@ -20,7 +20,7 @@ impl Default for OverpassServer {
 }
 
 impl Overpass for OverpassServer {
-    async fn evaluate(&self, query: &Query<'_, '_>) -> Result<OverpassResult, OverpassError> {
+    async fn evaluate(&self, query: &Query<'_>) -> Result<OverpassResult, OverpassError> {
         let mut body = String::new();
         query.fmt_oql(&mut body).map_err(|e| OverpassError::Query(e))?;
 

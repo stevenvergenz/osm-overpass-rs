@@ -28,7 +28,7 @@ impl Display for Bbox {
     }
 }
 
-impl<'i, 'f> QuerySet<'i, 'f> {
+impl QuerySet<'_> {
     pub fn within_bounds(mut self, bounds: Bbox) -> Self {
         self.bbox_filter = Some(bounds);
         self
