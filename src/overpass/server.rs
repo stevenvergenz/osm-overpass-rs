@@ -1,0 +1,51 @@
+use std::{borrow::Cow, sync::LazyLock};
+use crate::{Overpass, OverpassError, OverpassQL, OverpassResult, Query};
+use reqwest::Client;
+
+static CLIENT: LazyLock<Client> = LazyLock::new(|| Client::new());
+
+#[derive(Debug)]
+pub struct OverpassServer {
+    pub client: Cow<'static, Client>,
+    pub url: String,
+}
+
+impl Default for OverpassServer {
+    fn default() -> Self {
+        Self {
+            client: Cow::Borrowed(&CLIENT),
+            url: String::from("https://overpass-api.de/api/interpreter"),
+        }
+    }
+}
+
+impl Overpass for OverpassServer {
+    async fn evaluate(&self, query: &Query<'_, '_>) -> Result<OverpassResult, OverpassError> {
+        let mut body = String::new();
+        query.fmt_oql(&mut body).map_err(|e| OverpassError::Query(e))?;
+
+        let req = self.client.post(&self.url).body(body).build()
+            .map_err(|e| OverpassError::Request(e))?;
+        let res = self.client.execute(req).await
+            .map_err(|e| OverpassError::Request(e))?;
+
+        match res.bytes().await {
+            Err(e) => Err(OverpassError::Request(e)),
+            Ok(b) => serde_json::from_slice(&b).map_err(|e| OverpassError::Parse(e)),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::QuerySet;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn server() {
+        let q = OverpassServer::default().evaluate(
+            &QuerySet::any_type().with_ids([12903132, 19745997, 3359850618]).to_query(),
+        ).await;
+    }
+}

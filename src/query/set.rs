@@ -1,15 +1,11 @@
 use std::{
     borrow::Cow,
-    cell::RefCell,
     collections::HashSet,
     fmt::{Display, Formatter, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
 use crate::{
-    Bbox, OverpassQL, OverpassQLError, query::Query,
-};
-use super::{
-    TagFilter,
+    Bbox, OverpassQL, OverpassQLError, Query, Namer, TagFilter,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -48,12 +44,12 @@ impl Display for QuerySetType {
 }
 
 #[derive(Debug, Clone)]
-pub struct QuerySet<'i, 'f> {
+pub struct QuerySet<'input, 'filter> {
     pub content_type: QuerySetType,
-    pub input: Option<Box<Cow<'i, QuerySet<'i, 'f>>>>,
-    pub tag_filters: HashSet<TagFilter<'f>>,
+    pub input: Option<Box<Cow<'input, QuerySet<'input, 'filter>>>>,
+    pub id_filters: HashSet<i64>,
+    pub tag_filters: HashSet<TagFilter<'filter>>,
     pub bbox_filter: Option<Bbox>,
-    pub id: RefCell<Option<String>>,
 }
 
 impl Default for QuerySet<'_, '_> {
@@ -61,29 +57,41 @@ impl Default for QuerySet<'_, '_> {
         Self {
             content_type: QuerySetType::Any,
             input: None,
+            id_filters: HashSet::new(),
             tag_filters: HashSet::new(),
             bbox_filter: None,
-            id: RefCell::new(None),
         }
     }
 }
 
-impl<'i, 'f> QuerySet<'i, 'f> {
-    pub fn from(mut self, input: impl Into<Cow<'i, QuerySet<'i, 'f>>>) -> Self {
+impl<'input, 'filter> QuerySet<'input, 'filter> {
+    pub fn from(mut self, input: impl Into<Cow<'input, QuerySet<'input, 'filter>>>) -> Self {
         self.input = Some(Box::new(input.into()));
         self
     }
 
-    pub fn to_query(self) -> Query<'i, 'f> {
+    pub fn to_query(self) -> Query<'input, 'filter> {
         Query {
             query_set: self,
             ..Default::default()
         }
     }
+
+    pub fn with_id(mut self, id: i64) -> Self {
+        self.id_filters.insert(id);
+        self
+    }
+
+    pub fn with_ids(mut self, ids: impl IntoIterator<Item=i64>) -> Self {
+        for i in ids.into_iter() {
+            self = self.with_id(i);
+        }
+        self
+    }
 }
 
 /// constructors
-impl<'i, 'f> QuerySet<'i, 'f> {
+impl<'input, 'filter> QuerySet<'input, 'filter> {
     pub fn nodes() -> Self {
         Self {
             content_type: QuerySetType::Node,
@@ -148,13 +156,15 @@ impl<'i, 'f> QuerySet<'i, 'f> {
     }
 }
 
-impl OverpassQL for QuerySet<'_, '_> {
-    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
-        self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
-
-        if let Some(input) = &self.input
-        && let Some(id) = input.id.borrow().as_ref() {
-            write!(f, ".{id}").map_err(OverpassQLError::from)?;
+impl<'input, 'filter> QuerySet<'input, 'filter> {
+    fn fmt_filters(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
+        if self.id_filters.len() > 0 {
+            let mut iter = self.id_filters.iter();
+            write!(f, "(id:{}", iter.next().unwrap())?;
+            for i in iter {
+                write!(f, ",{i}")?;
+            }
+            write!(f, ")")?;
         }
 
         if let Some(bbox) = self.bbox_filter {
@@ -167,9 +177,36 @@ impl OverpassQL for QuerySet<'_, '_> {
             filter.fmt_oql(f)?;
         }
 
-        if let Some(id) = self.id.borrow().as_ref() {
-            write!(f, "->.{id}").map_err(OverpassQLError::from)?;
+        Ok(())
+    }
+
+    pub(crate) fn fmt_oql_named<'s>(&'s self,
+        f: &mut impl Write,
+        namer: &'s mut Namer<'s, 'input, 'filter>,
+    ) -> Result<(), OverpassQLError>
+    where 's: 'input {
+        self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
+
+        if let Some(input) = &self.input
+        && let Some(name) = namer.get_or_assign(input) {
+            write!(f, ".{name}").map_err(OverpassQLError::from)?;
         }
+
+        self.fmt_filters(f)?;
+
+        if let Some(name) = namer.get_or_assign(self) {
+            write!(f, "->.{name}").map_err(OverpassQLError::from)?;
+        }
+        
+        Ok(())
+    }
+}
+
+impl OverpassQL for QuerySet<'_, '_> {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
+        self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
+
+        self.fmt_filters(f)?;
 
         Ok(())
     }

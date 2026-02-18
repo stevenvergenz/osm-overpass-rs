@@ -7,8 +7,11 @@ pub use tag::*;
 mod bbox;
 pub use bbox::*;
 
-mod overpass;
-pub use overpass::*;
+mod overpassql;
+pub use overpassql::*;
+
+mod namer;
+pub use namer::*;
 
 use std::{
     collections::{HashMap, HashSet},
@@ -16,40 +19,48 @@ use std::{
 };
 use chrono::{DateTime, Duration, Utc};
 
+#[derive(Debug, Clone, Copy, Default)]
+pub enum QueryOutputFormat {
+    #[default]
+    Body,
+    Ids,
+    Skeleton,
+    Tags,
+}
+
+impl OverpassQL for QueryOutputFormat {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
+        let r = match self {
+            Self::Body => write!(f, "out body;"),
+            Self::Ids => write!(f, "out ids;"),
+            Self::Tags => write!(f, "out tags;"),
+            Self::Skeleton => write!(f, "out skel;"),
+        };
+        r.map_err(OverpassQLError::from)
+    }
+}
+impl Display for QueryOutputFormat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
+        self.fmt_oql(f).map_err(OverpassQLError::into)
+    }
+}
 
 #[derive(Debug, Default)]
-pub struct Query<'i, 'f> {
+pub struct Query<'input, 'filter> {
     pub timeout: Option<Duration>,
     pub max_size: Option<u32>,
     pub global_bbox: Option<Bbox>,
     pub as_of_date: Option<DateTime<Utc>>,
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
-    pub query_set: QuerySet<'i, 'f>,
+    pub query_set: QuerySet<'input, 'filter>,
+    pub output_format: QueryOutputFormat,
 }
 
-#[derive(Debug, Clone, Default)]
-struct NameIterator {
-    sequence_index: u32,
-}
-impl Iterator for NameIterator {
-    type Item = String;
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut output = vec![];
-        let mut div = self.sequence_index;
-        loop {
-            output.push(char::from_u32('a' as u32 + (div % 26)).unwrap());
-            div /= 26;
-            if div == 0 { break; }
-        }
-        self.sequence_index += 1;
-        Some(output.into_iter().rev().collect())
-    }
-}
-
-fn resolve_ordering<'a, 'i, 'f>(query_set: &'a QuerySet<'i, 'f>) -> Result<Vec<&'a QuerySet<'i, 'f>>, OverpassQLError>
-where 'i: 'a {
+fn resolve_ordering<'a, 'input, 'filter>(query_set: &'a QuerySet<'input, 'filter>)
+-> Result<Vec<&'a QuerySet<'input, 'filter>>, OverpassQLError>
+where 'input: 'a {
     // for {k: [v]}, v must be defined before k
-    let mut names = NameIterator::default();
+    let mut names = Namer::new();
     let mut refs = evaluate_refs_and_names(query_set, &mut names, HashMap::new());
 
     // for {k: [v]}, k must be defined before v
@@ -96,24 +107,19 @@ where 'i: 'a {
 
 fn evaluate_refs_and_names<'a, 'i, 'f>(
     set: &'a QuerySet<'i, 'f>, 
-    names: &mut NameIterator, 
+    names: &mut Namer, 
     mut refs: HashMap<&'a QuerySet<'i, 'f>, HashSet<&'a QuerySet<'i, 'f>>>,
 ) -> HashMap<&'a QuerySet<'i, 'f>, HashSet<&'a QuerySet<'i, 'f>>>
 where 'i: 'a, 'f: 'a {
     let deps = refs.entry(set).or_insert(HashSet::new());
-    if let Some(input) = &set.input {
-        deps.insert(input);
-        if input.id.borrow().is_none() {
-            input.id.borrow_mut().replace(names.next().unwrap());
-            refs = evaluate_refs_and_names(input, names, refs);
-        }
+    if let Some(input) = &set.input && deps.insert(input) {
+        refs = evaluate_refs_and_names(input, names, refs);
     }
     refs
 }
 
-impl<'i, 'f> OverpassQL for Query<'i, 'f> {
+impl<'input, 'filter> OverpassQL for Query<'input, 'filter> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
-        write!(f, "[out:json]").map_err(OverpassQLError::from)?;
         if let Some(d) = self.timeout {
             write!(f, "[timeout:{}]", d.as_seconds_f32() as u16).map_err(OverpassQLError::from)?;
         }
@@ -135,13 +141,16 @@ impl<'i, 'f> OverpassQL for Query<'i, 'f> {
                 write!(f, r#"[diff:"{a}"]"#).map_err(OverpassQLError::from)?;
             }
         }
+        write!(f, "[out:json];").map_err(OverpassQLError::from)?;
 
+        let mut namer = Namer::new();
+        namer.assign(&self.query_set, None);
         for set in resolve_ordering(&self.query_set)? {
-            set.fmt_oql(f)?;
+            set.fmt_oql_named(f, &mut namer)?;
             write!(f, ";").map_err(OverpassQLError::from)?;
         }
 
-        write!(f, "out;").map_err(OverpassQLError::from)
+        self.output_format.fmt_oql(f)
     }
 }
 
@@ -154,19 +163,6 @@ impl Display for Query<'_, '_> {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn name_iterator() {
-        assert_eq!(NameIterator::default().take(12).collect::<Vec<String>>(), vec![
-            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
-        ]);
-        assert_eq!(NameIterator::default().step_by(26).take(12).collect::<Vec<String>>(), vec![
-            "a", "ba", "ca", "da", "ea", "fa", "ga", "ha", "ia", "ja", "ka", "la",
-        ]);
-        assert_eq!(NameIterator::default().step_by(26*26).take(12).collect::<Vec<String>>(), vec![
-            "a", "baa", "caa", "daa", "eaa", "faa", "gaa", "haa", "iaa", "jaa", "kaa", "laa",
-        ]);
-    }
 
     #[test]
     fn resolve_ordering() {
