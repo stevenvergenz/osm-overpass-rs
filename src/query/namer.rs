@@ -15,7 +15,7 @@ impl<'a, 'b> Namer<'a, 'b> {
         }
     }
 
-    pub fn get_or_assign(&mut self, item: &'a QuerySet<'a>) -> Option<&str> {
+    pub fn get_or_assign(&mut self, item: &'b QuerySet<'a>) -> Option<&str> {
         self.names.entry(item)
             .or_insert_with(|| self.iter.next())
             .as_ref().map(|s| s.as_str())

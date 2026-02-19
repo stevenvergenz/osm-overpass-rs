@@ -180,11 +180,11 @@ impl<'a> QuerySet<'a> {
         Ok(())
     }
 
-    pub(crate) fn fmt_oql_named<'b>(&'b self,
+    pub(crate) fn fmt_oql_named<'b, 'c>(&'b self,
         f: &mut impl Write,
-        namer: &'b mut Namer<'a, 'b>,
+        namer: &mut Namer<'a, 'c>,
     ) -> Result<(), OverpassQLError>
-    where 'a: 'b {
+    where 'b: 'c {
         self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
 
         if let Some(input) = &self.input

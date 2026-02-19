@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     fmt::{Display, Formatter, Result as FResult},
 };
 use serde::Deserialize;
@@ -27,11 +26,11 @@ impl Display for OverpassError {
 }
 impl std::error::Error for OverpassError {}
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct OverpassResult {
     elements: Vec<OsmElement>,
-    #[serde(flatten)]
-    meta: HashMap<String, String>,
+    //#[serde(flatten)]
+    //meta: HashMap<String, String>,
 }
 
 pub trait Overpass {

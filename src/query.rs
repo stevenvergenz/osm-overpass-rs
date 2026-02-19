@@ -173,10 +173,10 @@ mod test {
         let s1 = QuerySet::nodes_or_ways().with_tag_values([("public_transport", "platform")]);
         let s2 = QuerySet::nodes().from(&s1);
         assert_eq!(s2.to_query().to_oql(), vec![
-            "[out:json]",
+            "[out:json];",
             r#"nw["public_transport"="platform"]->.a;"#,
             "node.a;",
-            "out;"
+            "out body;"
         ].join(""));
     }
 }
