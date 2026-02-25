@@ -2,7 +2,7 @@ use std::{
     fmt::{Display, Formatter, Result as FResult},
 };
 use serde::Deserialize;
-use crate::{OsmElement, OverpassQLError, Query};
+use crate::{Element, OverpassQLError, Query};
 
 mod server;
 pub use server::*;
@@ -28,7 +28,7 @@ impl std::error::Error for OverpassError {}
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct OverpassResult {
-    elements: Vec<OsmElement>,
+    elements: Vec<Element>,
     //#[serde(flatten)]
     //meta: HashMap<String, String>,
 }

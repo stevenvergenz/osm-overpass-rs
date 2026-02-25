@@ -2,7 +2,7 @@ use std::{
     fmt::{Display, Formatter, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
-use crate::{OverpassQL, OverpassQLError, QuerySet};
+use crate::{OverpassQL, OverpassQLError, Set};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum TagMatcher<'a> {
@@ -92,7 +92,7 @@ impl Hash for TagFilter<'_> {
 }
 
 // value exact match
-impl<'a> QuerySet<'a> {
+impl<'a> Set<'a> {
     pub fn with_tag_value(mut self, tag: &'a str, tag_value: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::new(
             TagName(TagMatcher::Exact(tag)), 
@@ -125,7 +125,7 @@ impl<'a> QuerySet<'a> {
 }
 
 // exists
-impl<'a> QuerySet<'a> {
+impl<'a> Set<'a> {
     pub fn with_tag(mut self, tag: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::name(TagName(TagMatcher::Exact(tag))));
         self
@@ -152,7 +152,7 @@ impl<'a> QuerySet<'a> {
 }
 
 // value regex match
-impl<'a> QuerySet<'a> {
+impl<'a> Set<'a> {
     pub fn with_tag_value_matching(mut self, tag: &'a str, value_re: &'a str) -> Self {
         self.tag_filters.insert(TagFilter::new(
             TagName(TagMatcher::Exact(tag)), 

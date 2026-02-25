@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy)]
-pub enum QuerySetType {
+pub enum QueryType {
     Node,
     Way,
     Relation,
@@ -21,7 +21,7 @@ pub enum QuerySetType {
     Area,
 }
 
-impl OverpassQL for QuerySetType {
+impl OverpassQL for QueryType {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
             Self::Node => write!(f, "node").map_err(OverpassQLError::from),
@@ -37,25 +37,25 @@ impl OverpassQL for QuerySetType {
     }
 }
 
-impl Display for QuerySetType {
+impl Display for QueryType {
     fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
         self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct QuerySet<'a> {
-    pub content_type: QuerySetType,
-    pub input: Option<Box<Cow<'a, QuerySet<'a>>>>,
+pub struct Set<'a> {
+    pub content_type: QueryType,
+    pub input: Option<Box<Cow<'a, Set<'a>>>>,
     pub id_filters: HashSet<i64>,
     pub tag_filters: HashSet<TagFilter<'a>>,
     pub bbox_filter: Option<Bbox>,
 }
 
-impl Default for QuerySet<'_> {
+impl Default for Set<'_> {
     fn default() -> Self {
         Self {
-            content_type: QuerySetType::Any,
+            content_type: QueryType::Any,
             input: None,
             id_filters: HashSet::new(),
             tag_filters: HashSet::new(),
@@ -64,8 +64,8 @@ impl Default for QuerySet<'_> {
     }
 }
 
-impl<'a> QuerySet<'a> {
-    pub fn from(mut self, input: impl Into<Cow<'a, QuerySet<'a>>>) -> Self {
+impl<'a> Set<'a> {
+    pub fn from(mut self, input: impl Into<Cow<'a, Set<'a>>>) -> Self {
         self.input = Some(Box::new(input.into()));
         self
     }
@@ -91,72 +91,72 @@ impl<'a> QuerySet<'a> {
 }
 
 /// constructors
-impl QuerySet<'_> {
-    pub fn nodes() -> Self {
+impl Set<'_> {
+    pub fn all_nodes() -> Self {
         Self {
-            content_type: QuerySetType::Node,
+            content_type: QueryType::Node,
             ..Default::default()
         }
     }
 
-    pub fn ways() -> Self {
+    pub fn all_ways() -> Self {
         Self {
-            content_type: QuerySetType::Way,
+            content_type: QueryType::Way,
             ..Default::default()
         }
     }
     
-    pub fn relations() -> Self {
+    pub fn all_relations() -> Self {
         Self {
-            content_type: QuerySetType::Relation,
+            content_type: QueryType::Relation,
             ..Default::default()
         }
     }
     
-    pub fn any_type() -> Self {
+    pub fn all_types() -> Self {
         Self {
-            content_type: QuerySetType::Any,
+            content_type: QueryType::Any,
             ..Default::default()
         }
     }
     
-    pub fn nodes_or_ways() -> Self {
+    pub fn all_nodes_or_ways() -> Self {
         Self {
-            content_type: QuerySetType::NodeOrWay,
+            content_type: QueryType::NodeOrWay,
             ..Default::default()
         }
     }
     
-    pub fn nodes_or_relations() -> Self {
+    pub fn all_nodes_or_relations() -> Self {
         Self {
-            content_type: QuerySetType::NodeOrRelation,
+            content_type: QueryType::NodeOrRelation,
             ..Default::default()
         }
     }
     
-    pub fn ways_or_relations() -> Self {
+    pub fn all_ways_or_relations() -> Self {
         Self {
-            content_type: QuerySetType::WayOrRelation,
+            content_type: QueryType::WayOrRelation,
             ..Default::default()
         }
     }
     
-    pub fn derived() -> Self {
+    pub fn all_derived() -> Self {
         Self {
-            content_type: QuerySetType::Derived,
+            content_type: QueryType::Derived,
             ..Default::default()
         }
     }
     
-    pub fn area() -> Self {
+    pub fn all_areas() -> Self {
         Self {
-            content_type: QuerySetType::Area,
+            content_type: QueryType::Area,
             ..Default::default()
         }
     }
 }
 
-impl<'a> QuerySet<'a> {
+impl<'a> Set<'a> {
     fn fmt_filters(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         if self.id_filters.len() > 0 {
             let mut iter = self.id_filters.iter();
@@ -202,7 +202,7 @@ impl<'a> QuerySet<'a> {
     }
 }
 
-impl OverpassQL for QuerySet<'_> {
+impl OverpassQL for Set<'_> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         self.content_type.fmt_oql(f).map_err(OverpassQLError::from)?;
 
@@ -212,33 +212,33 @@ impl OverpassQL for QuerySet<'_> {
     }
 }
 
-impl Display for QuerySet<'_> {
+impl Display for Set<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
         self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 
-impl PartialEq for QuerySet<'_> {
+impl PartialEq for Set<'_> {
     fn eq(&self, other: &Self) -> bool {
         std::ptr::eq(self, other)
     }
 }
-impl Eq for QuerySet<'_> {}
+impl Eq for Set<'_> {}
 
-impl Hash for QuerySet<'_> {
+impl Hash for Set<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         std::ptr::hash(self, state)
     }
 }
 
-impl<'a> Into<Cow<'a, QuerySet<'a>>> for QuerySet<'a> {
-    fn into(self) -> Cow<'a, QuerySet<'a>> {
+impl<'a> Into<Cow<'a, Set<'a>>> for Set<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
         Cow::Owned(self)
     }
 }
 
-impl<'a> Into<Cow<'a, QuerySet<'a>>> for &'a QuerySet<'a> {
-    fn into(self) -> Cow<'a, QuerySet<'a>> {
+impl<'a> Into<Cow<'a, Set<'a>>> for &'a Set<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
         Cow::Borrowed(self)
     }
 }
@@ -249,7 +249,7 @@ mod test {
 
     #[test]
     fn basic() {
-        let s = QuerySet::nodes().with_tag_values([("public_transport", "platform")]);
+        let s = Set::all_nodes().with_tag_values([("public_transport", "platform")]);
         assert_eq!(s.to_oql().as_str(), r#"node["public_transport"="platform"]"#);
     }
 }

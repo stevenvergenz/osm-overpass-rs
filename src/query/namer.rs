@@ -1,21 +1,21 @@
 use std::collections::HashMap;
-use crate::QuerySet;
+use crate::Set;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Namer<'a, 'b> where 'a: 'b {
     iter: NameIterator,
-    names: HashMap<&'b QuerySet<'a>, Option<String>>,
+    names: HashMap<&'b Set<'a>, Option<String>>,
 }
 
 impl<'a, 'b> Namer<'a, 'b> {
-    pub fn new(init: &'b QuerySet<'a>) -> Self {
+    pub fn new(init: &'b Set<'a>) -> Self {
         Self {
             iter: NameIterator { sequence_index: 0 },
             names: HashMap::from([(init, None)]),
         }
     }
 
-    pub fn get_or_assign(&mut self, item: &'b QuerySet<'a>) -> Option<&str> {
+    pub fn get_or_assign(&mut self, item: &'b Set<'a>) -> Option<&str> {
         self.names.entry(item)
             .or_insert_with(|| self.iter.next())
             .as_ref().map(|s| s.as_str())

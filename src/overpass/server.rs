@@ -39,17 +39,17 @@ impl Overpass for OverpassServer {
 #[cfg(test)]
 mod test {
     use std::collections::HashSet;
-    use crate::{OsmElementId, QuerySet};
+    use crate::{ElementId, Set};
 
     use super::*;
 
     #[tokio::test]
     async fn server() {
         let q = OverpassServer::default().evaluate(
-            &QuerySet::any_type().with_ids([12903132, 19745997, 3359850618]).to_query(),
+            &Set::all_nodes().with_id(3359850618).to_query(),
         ).await;
 
-        let ids = q.unwrap().elements.into_iter().map(|e| e.id()).collect::<HashSet<OsmElementId>>();
-        assert_eq!(ids, HashSet::from([OsmElementId::Node(3359850618)]));
+        let ids = q.unwrap().elements.into_iter().map(|e| e.id()).collect::<HashSet<ElementId>>();
+        assert_eq!(ids, HashSet::from([ElementId::Node(3359850618)]));
     }
 }

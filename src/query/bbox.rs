@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter, Result as FResult, Write};
-use crate::{OverpassQL, OverpassQLError, QuerySet};
+use crate::{OverpassQL, OverpassQLError, Set};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Bbox {
@@ -28,7 +28,7 @@ impl Display for Bbox {
     }
 }
 
-impl QuerySet<'_> {
+impl Set<'_> {
     pub fn within_bounds(mut self, bounds: Bbox) -> Self {
         self.bbox_filter = Some(bounds);
         self
@@ -47,7 +47,7 @@ mod test {
 
     #[test]
     fn query() {
-        let s = QuerySet::any_type().within_bounds(Bbox::new(1.5, 2.5, 3.5, 4.5));
+        let s = Set::all_types().within_bounds(Bbox::new(1.5, 2.5, 3.5, 4.5));
         assert_eq!(s.to_oql().as_str(), r#"nwr(1.5,2.5,3.5,4.5)"#);
     }
 }

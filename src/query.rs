@@ -52,12 +52,12 @@ pub struct Query<'a> {
     pub global_bbox: Option<Bbox>,
     pub as_of_date: Option<DateTime<Utc>>,
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
-    pub query_set: QuerySet<'a>,
+    pub query_set: Set<'a>,
     pub output_format: QueryOutputFormat,
 }
 
-fn resolve_ordering<'a, 'b>(query_set: &'b QuerySet<'a>)
--> Result<Vec<&'b QuerySet<'a>>, OverpassQLError>
+fn resolve_ordering<'a, 'b>(query_set: &'b Set<'a>)
+-> Result<Vec<&'b Set<'a>>, OverpassQLError>
 where 'a: 'b {
     // for {k: [v]}, v must be defined before k
     let mut refs = evaluate_refs(query_set, HashMap::new());
@@ -105,9 +105,9 @@ where 'a: 'b {
 
 
 fn evaluate_refs<'a, 'b>(
-    set: &'b QuerySet<'a>, 
-    mut refs: HashMap<&'b QuerySet<'a>, HashSet<&'b QuerySet<'a>>>,
-) -> HashMap<&'b QuerySet<'a>, HashSet<&'b QuerySet<'a>>>
+    set: &'b Set<'a>, 
+    mut refs: HashMap<&'b Set<'a>, HashSet<&'b Set<'a>>>,
+) -> HashMap<&'b Set<'a>, HashSet<&'b Set<'a>>>
 where 'a: 'b {
     let deps = refs.entry(set).or_insert(HashSet::new());
     if let Some(input) = &set.input && deps.insert(input) {
@@ -163,15 +163,15 @@ mod test {
 
     #[test]
     fn resolve_ordering() {
-        let q1 = QuerySet::nodes_or_ways().with_tag_values([("public_transport", "platform")]);
-        let q2 = QuerySet::nodes().from(&q1);
+        let q1 = Set::all_nodes_or_ways().with_tag_values([("public_transport", "platform")]);
+        let q2 = Set::all_nodes().from(&q1);
         assert_eq!(super::resolve_ordering(&q2).unwrap(), vec![&q1, &q2]);
     }
 
     #[test]
     fn fmt_oql() {
-        let s1 = QuerySet::nodes_or_ways().with_tag_values([("public_transport", "platform")]);
-        let s2 = QuerySet::nodes().from(&s1);
+        let s1 = Set::all_nodes_or_ways().with_tag_values([("public_transport", "platform")]);
+        let s2 = Set::all_nodes().from(&s1);
         assert_eq!(s2.to_query().to_oql(), vec![
             "[out:json];",
             r#"nw["public_transport"="platform"]->.a;"#,

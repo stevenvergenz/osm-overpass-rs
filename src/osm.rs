@@ -11,26 +11,26 @@ pub use relation::*;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all="lowercase", tag="type")]
-pub enum OsmElement {
-    Node(OsmNode),
-    Way(OsmWay),
-    Relation(OsmRelation),
+pub enum Element {
+    Node(Node),
+    Way(Way),
+    Relation(Relation),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "type", content = "ref")]
-pub enum OsmElementId {
+pub enum ElementId {
     Node(i64),
     Way(i64),
     Relation(i64),
 }
 
-impl OsmElement {
-    pub fn id(&self) -> OsmElementId {
+impl Element {
+    pub fn id(&self) -> ElementId {
         match self {
-            Self::Node(n) => OsmElementId::Node(n.id),
-            Self::Way(w) => OsmElementId::Way(w.id),
-            Self::Relation(r) => OsmElementId::Relation(r.id),
+            Self::Node(n) => ElementId::Node(n.id),
+            Self::Way(w) => ElementId::Way(w.id),
+            Self::Relation(r) => ElementId::Relation(r.id),
         }
     }
 
@@ -59,10 +59,10 @@ mod test {
 
     #[test]
     fn id() {
-        let a = OsmElementId::Node(123);
+        let a = ElementId::Node(123);
         let str = serde_json::to_string(&a).unwrap();
         assert_eq!(&str, r#"{"type":"node","ref":123}"#);
-        let b: OsmElementId = serde_json::from_str(&str).unwrap();
+        let b: ElementId = serde_json::from_str(&str).unwrap();
         assert_eq!(a, b);
     }
 }
