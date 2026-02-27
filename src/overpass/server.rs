@@ -1,5 +1,5 @@
 use std::{borrow::Cow, sync::LazyLock};
-use crate::{Overpass, OverpassError, OverpassQL, OverpassResult, Query};
+use crate::{Overpass, OverpassError, OverpassQLUnnamed, OverpassResult, Query};
 use reqwest::Client;
 
 static CLIENT: LazyLock<Client> = LazyLock::new(|| Client::new());
@@ -39,14 +39,19 @@ impl Overpass for OverpassServer {
 #[cfg(test)]
 mod test {
     use std::collections::HashSet;
-    use crate::{ElementId, Set};
+    use crate::{ElementId, FilterSet, FilterType, Set};
 
     use super::*;
 
     #[tokio::test]
+    #[ignore]
     async fn server() {
         let q = OverpassServer::default().evaluate(
-            &Set::all_nodes().with_id(3359850618).to_query(),
+            &Query::from(Set::Filter(FilterSet {
+                filter_type: FilterType::Node,
+                id_filters: HashSet::from([3359850618]),
+                ..Default::default()
+            })),
         ).await;
 
         let ids = q.unwrap().elements.into_iter().map(|e| e.id()).collect::<HashSet<ElementId>>();

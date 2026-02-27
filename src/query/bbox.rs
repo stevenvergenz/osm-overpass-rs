@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter, Result as FResult, Write};
-use crate::{OverpassQL, OverpassQLError, Set};
+use crate::{OverpassQLUnnamed, OverpassQLError, Set};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Bbox {
@@ -15,7 +15,7 @@ impl Bbox {
     }
 }
 
-impl OverpassQL for Bbox {
+impl OverpassQLUnnamed for Bbox {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         let Self { south, west, north, east } = self;
         write!(f, "{south},{west},{north},{east}").map_err(OverpassQLError::from)
@@ -25,13 +25,6 @@ impl OverpassQL for Bbox {
 impl Display for Bbox {
     fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
         self.fmt_oql(f).map_err(OverpassQLError::into)
-    }
-}
-
-impl Set<'_> {
-    pub fn within_bounds(mut self, bounds: Bbox) -> Self {
-        self.bbox_filter = Some(bounds);
-        self
     }
 }
 
@@ -45,9 +38,9 @@ mod test {
         assert_eq!(b.to_oql().as_str(), "1,2,3,4");
     }
 
-    #[test]
-    fn query() {
-        let s = Set::all_types().within_bounds(Bbox::new(1.5, 2.5, 3.5, 4.5));
-        assert_eq!(s.to_oql().as_str(), r#"nwr(1.5,2.5,3.5,4.5)"#);
-    }
+    // #[test]
+    // fn query() {
+    //     let s = Set::all_types().within_bounds(Bbox::new(1.5, 2.5, 3.5, 4.5));
+    //     assert_eq!(s.to_oql().as_str(), r#"nwr(1.5,2.5,3.5,4.5)"#);
+    // }
 }

@@ -1,6 +1,9 @@
 mod set;
 pub use set::*;
 
+mod filter; 
+pub(crate) use filter::*;
+
 mod tag;
 pub use tag::*;
 
@@ -28,7 +31,7 @@ pub enum QueryOutputFormat {
     Tags,
 }
 
-impl OverpassQL for QueryOutputFormat {
+impl OverpassQLUnnamed for QueryOutputFormat {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         let r = match self {
             Self::Body => write!(f, "out body;"),
@@ -52,8 +55,23 @@ pub struct Query<'a> {
     pub global_bbox: Option<Bbox>,
     pub as_of_date: Option<DateTime<Utc>>,
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
-    pub query_set: Set<'a>,
+    pub set: Set<'a>,
     pub output_format: QueryOutputFormat,
+}
+
+impl Display for Query<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
+        self.fmt_oql(f).map_err(OverpassQLError::into)
+    }
+}
+
+impl<'a> From<Set<'a>> for Query<'a> {
+    fn from(value: Set<'a>) -> Self {
+        Self {
+            set: value,
+            ..Default::default()
+        }
+    }
 }
 
 fn resolve_ordering<'a, 'b>(query_set: &'b Set<'a>)
@@ -110,13 +128,25 @@ fn evaluate_refs<'a, 'b>(
 ) -> HashMap<&'b Set<'a>, HashSet<&'b Set<'a>>>
 where 'a: 'b {
     let deps = refs.entry(set).or_insert(HashSet::new());
-    if let Some(input) = &set.input && deps.insert(input) {
-        refs = evaluate_refs(input, refs);
+    let set_refs = match set {
+        Set::Filter(f) => f.dependencies(),
+    };
+    let mut fresh = vec![];
+
+    for i in set_refs {
+        if deps.insert(i) {
+            fresh.push(i);
+        }
     }
+
+    for i in fresh {
+        refs = evaluate_refs(i, refs);
+    }
+
     refs
 }
 
-impl<'a> OverpassQL for Query<'a> {
+impl<'a> OverpassQLUnnamed for Query<'a> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         if let Some(d) = self.timeout {
             write!(f, "[timeout:{}]", d.as_seconds_f32() as u16).map_err(OverpassQLError::from)?;
@@ -141,8 +171,8 @@ impl<'a> OverpassQL for Query<'a> {
         }
         write!(f, "[out:json];").map_err(OverpassQLError::from)?;
 
-        let mut namer = Namer::new(&self.query_set);
-        for set in resolve_ordering(&self.query_set)? {
+        let mut namer = Namer::new(&self.set);
+        for set in resolve_ordering(&self.set)? {
             set.fmt_oql_named(f, &mut namer)?;
             write!(f, ";").map_err(OverpassQLError::from)?;
         }
@@ -151,28 +181,53 @@ impl<'a> OverpassQL for Query<'a> {
     }
 }
 
-impl Display for Query<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
-        self.fmt_oql(f).map_err(OverpassQLError::into)
-    }
-}
-
 #[cfg(test)]
 mod test {
+    use std::borrow::Cow;
+
     use super::*;
 
     #[test]
     fn resolve_ordering() {
-        let q1 = Set::all_nodes_or_ways().with_tag_values([("public_transport", "platform")]);
-        let q2 = Set::all_nodes().from(&q1);
+        let q1 = Set::Filter(FilterSet {
+            filter_type: FilterType::NodeOrWay,
+            tag_filters: HashSet::from([
+                TagFilter::new(
+                    TagName(TagMatcher::Exact("public_transport")),
+                    TagValue(TagMatcher::Exact("platform")),
+                ),
+            ]),
+            ..Default::default()
+        });
+        let q2 = Set::Filter(FilterSet {
+            filter_type: FilterType::Node,
+            inputs: HashSet::from([Box::new(Cow::Borrowed(&q1))]),
+            ..Default::default()
+        });
+
         assert_eq!(super::resolve_ordering(&q2).unwrap(), vec![&q1, &q2]);
     }
 
     #[test]
     fn fmt_oql() {
-        let s1 = Set::all_nodes_or_ways().with_tag_values([("public_transport", "platform")]);
-        let s2 = Set::all_nodes().from(&s1);
-        assert_eq!(s2.to_query().to_oql(), vec![
+        let q1 = Set::Filter(FilterSet {
+            filter_type: FilterType::NodeOrWay,
+            tag_filters: HashSet::from([
+                TagFilter::new(
+                    TagName(TagMatcher::Exact("public_transport")),
+                    TagValue(TagMatcher::Exact("platform")),
+                ),
+            ]),
+            ..Default::default()
+        });
+        let q2 = Set::Filter(FilterSet {
+            filter_type: FilterType::Node,
+            inputs: HashSet::from([Box::new(Cow::Borrowed(&q1))]),
+            ..Default::default()
+        });
+        let q = Query::from(q2);
+
+        assert_eq!(q.to_oql(), vec![
             "[out:json];",
             r#"nw["public_transport"="platform"]->.a;"#,
             "node.a;",

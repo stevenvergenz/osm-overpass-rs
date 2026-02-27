@@ -2,7 +2,7 @@ use std::{
     fmt::{Display, Formatter, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
-use crate::{OverpassQL, OverpassQLError, Set};
+use crate::{OverpassQLUnnamed, OverpassQLError, Set};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum TagMatcher<'a> {
@@ -13,9 +13,9 @@ pub enum TagMatcher<'a> {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct TagName<'a>(TagMatcher<'a>);
+pub struct TagName<'a>(pub TagMatcher<'a>);
 
-impl OverpassQL for TagName<'_> {
+impl OverpassQLUnnamed for TagName<'_> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self.0 {
             TagMatcher::Exact(n) => write!(f, r#""{n}""#).map_err(OverpassQLError::from),
@@ -33,9 +33,9 @@ impl Display for TagName<'_> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TagValue<'a>(TagMatcher<'a>);
+pub struct TagValue<'a>(pub TagMatcher<'a>);
 
-impl OverpassQL for TagValue<'_> {
+impl OverpassQLUnnamed for TagValue<'_> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self.0 {
             TagMatcher::Exact(n) => write!(f, r#"="{n}""#).map_err(OverpassQLError::from),
@@ -68,7 +68,7 @@ impl<'a> TagFilter<'a> {
     }
 }
 
-impl OverpassQL for TagFilter<'_> {
+impl OverpassQLUnnamed for TagFilter<'_> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         write!(f, "[").map_err(OverpassQLError::from)?;
         self.name.fmt_oql(f).map_err(OverpassQLError::from)?;
@@ -92,112 +92,112 @@ impl Hash for TagFilter<'_> {
 }
 
 // value exact match
-impl<'a> Set<'a> {
-    pub fn with_tag_value(mut self, tag: &'a str, tag_value: &'a str) -> Self {
-        self.tag_filters.insert(TagFilter::new(
-            TagName(TagMatcher::Exact(tag)), 
-            TagValue(TagMatcher::Exact(tag_value)),
-        ));
-        self
-    }
+// impl<'a> Set<'a> {
+//     pub fn with_tag_value(mut self, tag: &'a str, tag_value: &'a str) -> Self {
+//         self.tag_filters.insert(TagFilter::new(
+//             TagName(TagMatcher::Exact(tag)), 
+//             TagValue(TagMatcher::Exact(tag_value)),
+//         ));
+//         self
+//     }
 
-    pub fn with_tag_values(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
-        for (k, v) in tags.into_iter() {
-            self = self.with_tag_value(k, v);
-        }
-        self
-    }
+//     pub fn with_tag_values(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
+//         for (k, v) in tags.into_iter() {
+//             self = self.with_tag_value(k, v);
+//         }
+//         self
+//     }
 
-    pub fn without_tag_value(mut self, tag: &'a str, tag_value: &'a str) -> Self {
-        self.tag_filters.insert(TagFilter::new(
-            TagName(TagMatcher::Exact(tag)), 
-            TagValue(TagMatcher::NotExact(tag_value)),
-        ));
-        self
-    }
+//     pub fn without_tag_value(mut self, tag: &'a str, tag_value: &'a str) -> Self {
+//         self.tag_filters.insert(TagFilter::new(
+//             TagName(TagMatcher::Exact(tag)), 
+//             TagValue(TagMatcher::NotExact(tag_value)),
+//         ));
+//         self
+//     }
 
-    pub fn without_tag_values(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
-        for (k, v) in tags.into_iter() {
-            self = self.without_tag_value(k, v);
-        }
-        self
-    }
-}
+//     pub fn without_tag_values(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
+//         for (k, v) in tags.into_iter() {
+//             self = self.without_tag_value(k, v);
+//         }
+//         self
+//     }
+// }
 
-// exists
-impl<'a> Set<'a> {
-    pub fn with_tag(mut self, tag: &'a str) -> Self {
-        self.tag_filters.insert(TagFilter::name(TagName(TagMatcher::Exact(tag))));
-        self
-    }
+// // exists
+// impl<'a> Set<'a> {
+//     pub fn with_tag(mut self, tag: &'a str) -> Self {
+//         self.tag_filters.insert(TagFilter::name(TagName(TagMatcher::Exact(tag))));
+//         self
+//     }
 
-    pub fn with_tags(mut self, tags: impl IntoIterator<Item=&'a str>) -> Self {
-        for tag in tags.into_iter() {
-            self = self.with_tag(tag);
-        }
-        self
-    }
+//     pub fn with_tags(mut self, tags: impl IntoIterator<Item=&'a str>) -> Self {
+//         for tag in tags.into_iter() {
+//             self = self.with_tag(tag);
+//         }
+//         self
+//     }
 
-    pub fn without_tag(mut self, tag: &'a str) -> Self {
-        self.tag_filters.insert(TagFilter::name(TagName(TagMatcher::NotExact(tag))));
-        self
-    }
+//     pub fn without_tag(mut self, tag: &'a str) -> Self {
+//         self.tag_filters.insert(TagFilter::name(TagName(TagMatcher::NotExact(tag))));
+//         self
+//     }
 
-    pub fn without_tags(mut self, tags: impl IntoIterator<Item=&'a str>) -> Self {
-        for tag in tags.into_iter() {
-            self = self.without_tag(tag);
-        }
-        self
-    }
-}
+//     pub fn without_tags(mut self, tags: impl IntoIterator<Item=&'a str>) -> Self {
+//         for tag in tags.into_iter() {
+//             self = self.without_tag(tag);
+//         }
+//         self
+//     }
+// }
 
-// value regex match
-impl<'a> Set<'a> {
-    pub fn with_tag_value_matching(mut self, tag: &'a str, value_re: &'a str) -> Self {
-        self.tag_filters.insert(TagFilter::new(
-            TagName(TagMatcher::Exact(tag)), 
-            TagValue(TagMatcher::Matching(value_re)),
-        ));
-        self
-    }
+// // value regex match
+// impl<'a> Set<'a> {
+//     pub fn with_tag_value_matching(mut self, tag: &'a str, value_re: &'a str) -> Self {
+//         self.tag_filters.insert(TagFilter::new(
+//             TagName(TagMatcher::Exact(tag)), 
+//             TagValue(TagMatcher::Matching(value_re)),
+//         ));
+//         self
+//     }
 
-    pub fn with_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
-        for (k, v) in tags.into_iter() {
-            self = self.with_tag_value_matching(k, v);
-        }
-        self
-    }
+//     pub fn with_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
+//         for (k, v) in tags.into_iter() {
+//             self = self.with_tag_value_matching(k, v);
+//         }
+//         self
+//     }
 
-    pub fn without_tag_value_matching(mut self, tag: &'a str, value_re: &'a str) -> Self {
-        self.tag_filters.insert(TagFilter::new(
-            TagName(TagMatcher::Exact(tag)), 
-            TagValue(TagMatcher::NotMatching(value_re)),
-        ));
-        self
-    }
+//     pub fn without_tag_value_matching(mut self, tag: &'a str, value_re: &'a str) -> Self {
+//         self.tag_filters.insert(TagFilter::new(
+//             TagName(TagMatcher::Exact(tag)), 
+//             TagValue(TagMatcher::NotMatching(value_re)),
+//         ));
+//         self
+//     }
 
-    pub fn without_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
-        for (k, v) in tags.into_iter() {
-            self = self.without_tag_value_matching(k, v);
-        }
-        self
-    }
+//     pub fn without_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
+//         for (k, v) in tags.into_iter() {
+//             self = self.without_tag_value_matching(k, v);
+//         }
+//         self
+//     }
 
-    pub fn with_matching_tag_value_matching(mut self, tag_re: &'a str, value_re: &'a str) -> Self {
-        self.tag_filters.insert(TagFilter::new(
-            TagName(TagMatcher::Matching(tag_re)), 
-            TagValue(TagMatcher::Matching(value_re)),
-        ));
-        self
-    }
+//     pub fn with_matching_tag_value_matching(mut self, tag_re: &'a str, value_re: &'a str) -> Self {
+//         self.tag_filters.insert(TagFilter::new(
+//             TagName(TagMatcher::Matching(tag_re)), 
+//             TagValue(TagMatcher::Matching(value_re)),
+//         ));
+//         self
+//     }
 
-    pub fn with_matching_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
-        for (k, v) in tags.into_iter() {
-            self = self.with_matching_tag_value_matching(k, v);
-        }
-        self
-    }
-}
+//     pub fn with_matching_tag_values_matching(mut self, tags: impl IntoIterator<Item=(&'a str, &'a str)>) -> Self {
+//         for (k, v) in tags.into_iter() {
+//             self = self.with_matching_tag_value_matching(k, v);
+//         }
+//         self
+//     }
+// }
 
 #[cfg(test)]
 mod test {
