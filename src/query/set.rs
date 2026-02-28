@@ -1,11 +1,10 @@
 use std::{
     borrow::Cow,
-    collections::HashSet,
     fmt::{Display, Formatter, Result as FResult, Write},
     hash::{Hash, Hasher},
 };
 use crate::{
-    Bbox, FilterSet, Namer, OverpassQLError, OverpassQLNamed, OverpassQLUnnamed, Query, TagFilter
+    FilterSet, Namer, OverpassQLError, OverpassQLNamed, OverpassQLUnnamed,
 };
 
 #[derive(Debug, Clone)]
@@ -33,7 +32,7 @@ impl<'a> OverpassQLNamed<'a> for Set<'a> {
     where 'b: 'c {
         match self {
             Self::Filter(filter) => filter.fmt_oql_named(f, namer),
-        };
+        }?;
 
         if let Some(name) = namer.get_or_assign(self) {
             write!(f, "->.{name}").map_err(OverpassQLError::from)?;
@@ -81,13 +80,3 @@ impl<'a> Into<Cow<'a, Set<'a>>> for &'a Set<'a> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    // #[test]
-    // fn basic() {
-    //     let s = Set::all_nodes().with_tag_values([("public_transport", "platform")]);
-    //     assert_eq!(s.to_oql().as_str(), r#"node["public_transport"="platform"]"#);
-    // }
-}

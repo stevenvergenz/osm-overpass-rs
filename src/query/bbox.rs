@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter, Result as FResult, Write};
-use crate::{OverpassQLUnnamed, OverpassQLError, Set};
+use crate::{OverpassQLUnnamed, OverpassQLError};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Bbox {

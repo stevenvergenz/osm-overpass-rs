@@ -192,10 +192,7 @@ mod test {
         let q1 = Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrWay,
             tag_filters: HashSet::from([
-                TagFilter::new(
-                    TagName(TagMatcher::Exact("public_transport")),
-                    TagValue(TagMatcher::Exact("platform")),
-                ),
+                TagFilter::equals("public_transport", "platform"),
             ]),
             ..Default::default()
         });
@@ -213,10 +210,7 @@ mod test {
         let q1 = Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrWay,
             tag_filters: HashSet::from([
-                TagFilter::new(
-                    TagName(TagMatcher::Exact("public_transport")),
-                    TagValue(TagMatcher::Exact("platform")),
-                ),
+                TagFilter::equals("public_transport", "platform"),
             ]),
             ..Default::default()
         });

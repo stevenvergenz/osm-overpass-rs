@@ -51,7 +51,7 @@ impl<'a> Into<Set<'a>> for FilterType {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct FilterSet<'a> {
+pub struct FilterSet<'a> {
     pub filter_type: FilterType,
     pub inputs: HashSet<Box<Cow<'a, Set<'a>>>>,
     pub id_filters: HashSet<i64>,
