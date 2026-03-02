@@ -35,23 +35,10 @@ impl<'a> OverpassQLNamed<'a> for Set<'a> {
         }?;
 
         if let Some(name) = namer.get_or_assign(self) {
-            write!(f, "->.{name}").map_err(OverpassQLError::from)?;
+            write!(f, "->.{name}")?;
         }
 
         Ok(())
-    }
-}
-
-impl OverpassQLUnnamed for Set<'_> {
-    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
-        let mut namer = Namer::new(self);
-        self.fmt_oql_named(f, &mut namer)
-    }
-}
-
-impl Display for Set<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
-        self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 

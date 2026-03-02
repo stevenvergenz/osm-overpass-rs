@@ -1,10 +1,10 @@
 use std::{
     borrow::Cow,
     collections::HashSet,
-    fmt::{Display, Formatter, Result as FResult, Write},
+    fmt::Write,
 };
 use crate::{
-    Bbox, Namer, OverpassQLUnnamed, OverpassQLError, OverpassQLNamed, Set, TagFilter
+    Bbox, Namer, OverpassQLError, OverpassQLNamed, OverpassQLUnnamed, RecurseFilter, Set, TagFilter
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -38,12 +38,6 @@ impl OverpassQLUnnamed for FilterType {
     }
 }
 
-impl Display for FilterType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
-        self.fmt_oql(f).map_err(OverpassQLError::into)
-    }
-}
-
 impl<'a> Into<Set<'a>> for FilterType {
     fn into(self) -> Set<'a> {
         Set::Filter(FilterSet { filter_type: self, ..Default::default() })
@@ -57,6 +51,7 @@ pub struct FilterSet<'a> {
     pub id_filters: HashSet<i64>,
     pub tag_filters: HashSet<TagFilter<'a>>,
     pub bbox_filter: Option<Bbox>,
+    pub recurse_filters: HashSet<RecurseFilter<'a>>,
 }
 
 impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
@@ -80,14 +75,18 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
             write!(f, ")")?;
         }
 
-        if let Some(bbox) = self.bbox_filter {
+        if let Some(bbox) = &self.bbox_filter {
             write!(f, "(")?;
             bbox.fmt_oql(f)?;
             write!(f, ")")?;
         }
 
-        for filter in self.tag_filters.iter() {
+        for filter in &self.tag_filters {
             filter.fmt_oql(f)?;
+        }
+
+        for filter in &self.recurse_filters {
+            filter.fmt_oql_named(f, namer)?;
         }
         
         Ok(())
@@ -95,7 +94,8 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
 }
 
 impl<'a> FilterSet<'a> {
-    pub fn dependencies(&self) -> impl ExactSizeIterator<Item = &Set<'a>> {
+    pub fn dependencies(&self) -> impl Iterator<Item = &Set<'a>> {
         self.inputs.iter().map(|i| i.as_ref().as_ref())
+            .chain(self.recurse_filters.iter().map(|r| r.input()))
     }
 }

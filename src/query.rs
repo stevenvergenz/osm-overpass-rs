@@ -14,7 +14,13 @@ mod overpassql;
 pub use overpassql::*;
 
 mod namer;
-pub(crate) use namer::Namer;
+pub use namer::*;
+
+mod recurse;
+pub use recurse::*;
+
+mod util;
+pub use util::*;
 
 use std::{
     collections::{HashMap, HashSet},
