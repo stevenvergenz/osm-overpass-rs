@@ -22,6 +22,9 @@ pub use recurse::*;
 mod util;
 pub use util::*;
 
+mod union;
+pub use union::*;
+
 use std::{
     collections::{HashMap, HashSet},
     fmt::{Display, Formatter, Result as FResult, Write},
@@ -109,14 +112,12 @@ where 'a: 'b {
         }
 
         for next in next_outputs {
-            println!("Outputting set {next}");
             // output them first
             output.push(next);
 
             // take them out of any reference list that contains them
             if let Some(next_refs) = back_refs.remove(next) {
                 for referent in next_refs.iter() {
-                    println!("Removing reference from {referent}");
                     refs.get_mut(referent).unwrap().remove(next);
                 }
             }
@@ -134,16 +135,9 @@ fn evaluate_refs<'a, 'b>(
 ) -> HashMap<&'b Set<'a>, HashSet<&'b Set<'a>>>
 where 'a: 'b {
     let deps = refs.entry(set).or_insert(HashSet::new());
-    let set_refs = match set {
-        Set::Filter(f) => f.dependencies(),
-    };
-    let mut fresh = vec![];
-
-    for i in set_refs {
-        if deps.insert(i) {
-            fresh.push(i);
-        }
-    }
+    let fresh = set.dependencies()
+        .filter(|s| deps.insert(s))
+        .collect::<Vec<_>>();
 
     for i in fresh {
         refs = evaluate_refs(i, refs);
@@ -155,32 +149,32 @@ where 'a: 'b {
 impl<'a> OverpassQLUnnamed for Query<'a> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         if let Some(d) = self.timeout {
-            write!(f, "[timeout:{}]", d.as_seconds_f32() as u16).map_err(OverpassQLError::from)?;
+            write!(f, "[timeout:{}]", d.as_seconds_f32() as u16)?;
         }
         if let Some(s) = self.max_size {
-            write!(f, "[maxsize:{s}]").map_err(OverpassQLError::from)?;
+            write!(f, "[maxsize:{s}]")?;
         }
         if let Some(bbox) = self.global_bbox {
-            write!(f, "[bbox:").map_err(OverpassQLError::from)?;
+            write!(f, "[bbox:")?;
             bbox.fmt_oql(f)?;
-            write!(f, "]").map_err(OverpassQLError::from)?;
+            write!(f, "]")?;
         }
         if let Some(d) = self.as_of_date {
-            write!(f, r#"[date:"{d}"]"#).map_err(OverpassQLError::from)?;
+            write!(f, r#"[date:"{d}"]"#)?;
         }
         if let Some((a, mayb)) = self.diff {
             if let Some(b) = mayb {
-                write!(f, r#"[diff:"{a}","{b}"]"#).map_err(OverpassQLError::from)?;
+                write!(f, r#"[diff:"{a}","{b}"]"#)?;
             } else {
-                write!(f, r#"[diff:"{a}"]"#).map_err(OverpassQLError::from)?;
+                write!(f, r#"[diff:"{a}"]"#)?;
             }
         }
-        write!(f, "[out:json];").map_err(OverpassQLError::from)?;
+        write!(f, "[out:json];")?;
 
         let mut namer = Namer::new(&self.set);
         for set in resolve_ordering(&self.set)? {
             set.fmt_oql_named(f, &mut namer)?;
-            write!(f, ";").map_err(OverpassQLError::from)?;
+            write!(f, ";")?;
         }
 
         self.output_format.fmt_oql(f)

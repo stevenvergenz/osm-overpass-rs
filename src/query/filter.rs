@@ -1,6 +1,6 @@
 use std::{
     borrow::Cow,
-    collections::HashSet,
+    collections::{hash_set::IntoIter, HashSet},
     fmt::Write,
 };
 use crate::{
@@ -94,8 +94,9 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
 }
 
 impl<'a> FilterSet<'a> {
-    pub fn dependencies(&self) -> impl Iterator<Item = &Set<'a>> {
+    pub fn dependencies(&self) -> IntoIter<&Set<'a>> {
         self.inputs.iter().map(|i| i.as_ref().as_ref())
             .chain(self.recurse_filters.iter().map(|r| r.input()))
+            .collect::<HashSet<_>>().into_iter()
     }
 }
