@@ -31,3 +31,28 @@ impl<'a> UnionSet<'a> {
             .collect::<HashSet<_>>().into_iter()
     }
 }
+
+impl<'a, A> FromIterator<A> for UnionSet<'a>
+where A: Into<Cow<'a, Set<'a>>> {
+    fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
+        Self(iter.into_iter().map(|i| i.into()).collect())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::FilterSet;
+
+    #[test]
+    fn union() {
+        let set = Set::Union(UnionSet(HashSet::from([
+            Cow::Owned(Set::Filter(FilterSet::default())),
+            Cow::Owned(Set::Filter(FilterSet::default())),
+        ])));
+
+        let mut output = String::new();
+        set.fmt_oql_named(&mut output, &mut Namer::new(&set)).unwrap();
+        assert_eq!(output, "(.a;.b;)");
+    }
+}

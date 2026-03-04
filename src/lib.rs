@@ -6,3 +6,6 @@ pub use query::*;
 
 mod overpass;
 pub use overpass::*;
+
+mod builder;
+pub use builder::*;
