@@ -2,7 +2,7 @@ mod set;
 pub use set::*;
 
 mod filter; 
-pub(crate) use filter::*;
+pub use filter::*;
 
 mod tag;
 pub use tag::*;
@@ -28,8 +28,9 @@ pub use union::*;
 use std::{
     collections::{HashMap, HashSet},
     fmt::{Display, Formatter, Result as FResult, Write},
+    time::Duration,
 };
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub enum QueryOutputFormat {
@@ -66,12 +67,6 @@ pub struct Query<'a> {
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
     pub set: Set<'a>,
     pub output_format: QueryOutputFormat,
-}
-
-impl Display for Query<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
-        self.fmt_oql(f).map_err(OverpassQLError::into)
-    }
 }
 
 impl<'a> From<Set<'a>> for Query<'a> {
@@ -149,7 +144,7 @@ where 'a: 'b {
 impl<'a> OverpassQLUnnamed for Query<'a> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         if let Some(d) = self.timeout {
-            write!(f, "[timeout:{}]", d.as_seconds_f32() as u16)?;
+            write!(f, "[timeout:{}]", d.as_secs())?;
         }
         if let Some(s) = self.max_size {
             write!(f, "[maxsize:{s}]")?;
@@ -198,7 +193,7 @@ mod test {
         });
         let q2 = Set::Filter(FilterSet {
             filter_type: FilterType::Node,
-            inputs: HashSet::from([Box::new(Cow::Borrowed(&q1))]),
+            inputs: HashSet::from([Cow::Borrowed(&q1)]),
             ..Default::default()
         });
 
@@ -216,7 +211,7 @@ mod test {
         });
         let q2 = Set::Filter(FilterSet {
             filter_type: FilterType::Node,
-            inputs: HashSet::from([Box::new(Cow::Borrowed(&q1))]),
+            inputs: HashSet::from([Cow::Borrowed(&q1)]),
             ..Default::default()
         });
         let q = Query::from(q2);

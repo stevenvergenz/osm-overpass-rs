@@ -1,9 +1,23 @@
 use std::borrow::Cow;
-use crate::{Bbox, FilterSet, FilterType, RecurseFilter, SaniStr, Set, SetBuilder, TagFilter};
+use crate::{Bbox, FilterSet, FilterType, RecurseFilter, SaniStr, Set, SetBuilder, TagFilter, Builder};
 
 pub struct FilterSetBuilder<'a>(
-    FilterSet<'a>,
+    pub FilterSet<'a>,
 );
+
+impl<'a> Builder<'a> for FilterSetBuilder<'a> {}
+
+impl<'a> Into<Set<'a>> for FilterSetBuilder<'a> {
+    fn into(self) -> Set<'a> {
+        self.0.into()
+    }
+}
+
+impl<'a> Into<Cow<'a, Set<'a>>> for FilterSetBuilder<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
+        Cow::Owned(self.into())
+    }
+}
 
 impl SetBuilder {
     pub fn all_nodes<'a>() -> FilterSetBuilder<'a> {
@@ -18,7 +32,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Node,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -35,7 +49,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Way,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -52,7 +66,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Relation,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -69,7 +83,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Any,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -86,7 +100,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::NodeOrWay,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -103,7 +117,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::NodeOrRelation,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -120,7 +134,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::WayOrRelation,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -137,7 +151,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Derived,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -154,7 +168,7 @@ impl SetBuilder {
     where T: Into<Cow<'a, Set<'a>>> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Area,
-            inputs: sets.into_iter().map(|i| Box::new(i.into())).collect(),
+            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -173,8 +187,8 @@ impl<'a> FilterSetBuilder<'a> {
         self
     }
 
-    pub fn within_bounds(mut self, bbox: Bbox) -> Self {
-        self.0.bbox_filter = Some(bbox);
+    pub fn within_bounds(mut self, bbox: impl Into<Bbox>) -> Self {
+        self.0.bbox_filter = Some(bbox.into());
         self
     }
 
@@ -304,23 +318,11 @@ impl<'a> FilterSetBuilder<'a> {
     }
 }
 
-impl<'a> Into<Set<'a>> for FilterSetBuilder<'a> {
-    fn into(self) -> Set<'a> {
-        self.0.into()
-    }
-}
-
-impl<'a> Into<Cow<'a, Set<'a>>> for FilterSetBuilder<'a> {
-    fn into(self) -> Cow<'a, Set<'a>> {
-        Cow::Owned(self.into())
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
 
-    fn all_nodes_from() {
+    fn _all_nodes_from() {
         let _ = SetBuilder::nodes_from([SetBuilder::all_nodes()]);
 
         let set: Set = SetBuilder::all_ways().into();

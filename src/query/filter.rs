@@ -47,7 +47,7 @@ impl<'a> Into<Set<'a>> for FilterType {
 #[derive(Debug, Clone, Default)]
 pub struct FilterSet<'a> {
     pub filter_type: FilterType,
-    pub inputs: HashSet<Box<Cow<'a, Set<'a>>>>,
+    pub inputs: HashSet<Cow<'a, Set<'a>>>,
     pub id_filters: HashSet<i64>,
     pub tag_filters: HashSet<TagFilter<'a>>,
     pub bbox_filter: Option<Bbox>,
@@ -95,7 +95,7 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
 
 impl<'a> FilterSet<'a> {
     pub fn dependencies(&self) -> IntoIter<&Set<'a>> {
-        self.inputs.iter().map(|i| i.as_ref().as_ref())
+        self.inputs.iter().map(|i| i.as_ref())
             .chain(self.recurse_filters.iter().map(|r| r.input()))
             .collect::<HashSet<_>>().into_iter()
     }
