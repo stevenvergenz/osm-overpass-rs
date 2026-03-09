@@ -28,11 +28,11 @@ impl std::error::Error for OverpassError {}
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct OverpassResult {
-    elements: Vec<Element>,
+    pub elements: Vec<Element>,
     //#[serde(flatten)]
     //meta: HashMap<String, String>,
 }
 
 pub trait Overpass {
-    fn evaluate(&self, query: &Query) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>> + Send;
+    fn evaluate(&self, query: &Query<'_>) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>> + Send;
 }

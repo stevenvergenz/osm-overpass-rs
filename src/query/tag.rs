@@ -1,5 +1,5 @@
 use std::{
-    fmt::{Display, Formatter, Result as FResult, Write}, hash::Hash,
+    fmt::Write, hash::Hash,
 };
 use crate::{OverpassQLUnnamed, OverpassQLError, SaniStr};
 
@@ -26,12 +26,6 @@ impl OverpassQLUnnamed for TagFilter<'_> {
             Self::NameValueMatches(n, v) => write!(f, "[~{n}~{v}]"),
         }?;
         Ok(())
-    }
-}
-
-impl Display for TagFilter<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
-        self.fmt_oql(f).map_err(OverpassQLError::into)
     }
 }
 

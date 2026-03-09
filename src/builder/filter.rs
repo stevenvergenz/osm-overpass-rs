@@ -180,7 +180,7 @@ impl<'a> FilterSetBuilder<'a> {
         self
     }
 
-    pub fn with_id_in(mut self, ids: impl IntoIterator<Item=i64>) -> Self {
+    pub fn with_ids(mut self, ids: impl IntoIterator<Item=i64>) -> Self {
         for id in ids {
             self.0.id_filters.insert(id);
         }
@@ -189,6 +189,41 @@ impl<'a> FilterSetBuilder<'a> {
 
     pub fn within_bounds(mut self, bbox: impl Into<Bbox>) -> Self {
         self.0.bbox_filter = Some(bbox.into());
+        self
+    }
+
+    pub fn with_tag(mut self, tag: &'a str) -> Self {
+        self.0.tag_filters.insert(TagFilter::exists(tag));
+        self
+    }
+
+    pub fn without_tag(mut self, tag: &'a str) -> Self {
+        self.0.tag_filters.insert(TagFilter::not_exists(tag));
+        self
+    }
+
+    pub fn with_tag_value(mut self, tag: &'a str, value: &'a str) -> Self {
+        self.0.tag_filters.insert(TagFilter::equals(tag, value));
+        self
+    }
+
+    pub fn without_tag_value(mut self, tag: &'a str, value: &'a str) -> Self {
+        self.0.tag_filters.insert(TagFilter::not_equals(tag, value));
+        self
+    }
+
+    pub fn with_tag_value_matching(mut self, tag: &'a str, value_pat: &'a str) -> Self {
+        self.0.tag_filters.insert(TagFilter::matches(tag, value_pat));
+        self
+    }
+
+    pub fn without_tag_value_matching(mut self, tag: &'a str, value_pat: &'a str) -> Self {
+        self.0.tag_filters.insert(TagFilter::not_matches(tag, value_pat));
+        self
+    }
+
+    pub fn with_tag_name_and_value_matching(mut self, tag_pat: &'a str, value_pat: &'a str) -> Self {
+        self.0.tag_filters.insert(TagFilter::name_value_matches(tag_pat, value_pat));
         self
     }
 
