@@ -11,7 +11,7 @@ pub enum Element {
     Relation(Relation),
 }
 
-/// The identifier of an [Element], independent of the specific variant
+/// The identifier of an [Element], independent of the specific variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "type", content = "ref")]
 pub enum ElementId {

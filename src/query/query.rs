@@ -5,7 +5,7 @@ use std::{
 use chrono::{DateTime, Utc};
 use crate::{OverpassQLUnnamed, OverpassQLError, Set, Bbox, OverpassQLNamed, Namer};
 
-/// The amount of detail to be included in [Query]-matched [crate::Element]s.
+/// The amount of detail to be included in [Query]-matched [Element](crate::Element)s.
 /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
 #[derive(Debug, Clone, Copy, Default)]
 pub enum QueryVerbosity {
@@ -41,7 +41,7 @@ impl OverpassQLUnnamed for QueryVerbosity {
     }
 }
 
-/// The root type of this API. It serializes into a complete Overpass QL query via [OverpassQLUnnamed::to_oql].
+/// The root type of this API. It serializes into a complete Overpass QL query by calling [to_oql](OverpassQLUnnamed::to_oql).
 #[derive(Debug, Default)]
 pub struct Query<'a> {
     /// The length of time in seconds after which the server will abort the query.
@@ -64,11 +64,11 @@ pub struct Query<'a> {
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Difference_between_two_dates_.28diff.29)
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
 
-    /// Adjust the amount of detail included in returned [crate::Element]s.
+    /// Adjust the amount of detail included in returned [Element](crate::Element)s.
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
     pub verbosity: QueryVerbosity,
 
-    /// The [Set] of [crate::Element]s to be returned when this query is [crate::Overpass::evaluate]d.
+    /// The [Set] of [Element](crate::Element)s to be returned when this query is [evaluate](crate::Overpass::evaluate)d.
     pub set: Set<'a>,
 }
 
