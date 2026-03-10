@@ -1,11 +1,17 @@
-use std::fmt::{Display, Formatter, Result as FResult, Write};
-use crate::{OverpassQLUnnamed, OverpassQLError};
+use std::fmt::Write;
+use crate::{OverpassQL, OverpassQLError};
 
+/// A geographic bounding box defined by two latitudes and two longitudes. Used to distinguish
+/// points inside and outside the box.
 #[derive(Debug, Clone, Copy)]
 pub struct Bbox {
+    /// The latitude of the southern edge of the bounding box.
     pub south: f64,
+    /// The longitude of the western edge of the bounding box.
     pub west: f64,
+    /// The latitude of the northern edge of the bounding box.
     pub north: f64,
+    /// The longitude of the eastern edge of the bounding box.
     pub east: f64,
 }
 
@@ -15,16 +21,11 @@ impl Bbox {
     }
 }
 
-impl OverpassQLUnnamed for Bbox {
+impl OverpassQL for Bbox {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         let Self { south, west, north, east } = self;
-        write!(f, "{south},{west},{north},{east}").map_err(OverpassQLError::from)
-    }
-}
-
-impl Display for Bbox {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FResult {
-        self.fmt_oql(f).map_err(OverpassQLError::into)
+        write!(f, "{south},{west},{north},{east}")?;
+        Ok(())
     }
 }
 

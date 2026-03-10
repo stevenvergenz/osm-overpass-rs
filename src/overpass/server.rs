@@ -1,5 +1,5 @@
 use std::{borrow::Cow, sync::LazyLock};
-use crate::{Overpass, OverpassError, OverpassQLUnnamed, OverpassResult, Query};
+use crate::{Overpass, OverpassError, OverpassQL, OverpassResult, Query};
 use reqwest::Client;
 
 static CLIENT: LazyLock<Client> = LazyLock::new(|| Client::new());

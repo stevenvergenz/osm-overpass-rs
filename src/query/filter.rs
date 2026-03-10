@@ -4,7 +4,7 @@ use std::{
     fmt::Write,
 };
 use crate::{
-    Bbox, Namer, OverpassQLError, OverpassQLNamed, OverpassQLUnnamed, RecurseFilter, Set, TagFilter
+    Bbox, Namer, OverpassQLError, OverpassQLNamed, OverpassQL, RecurseFilter, Set, TagFilter
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -21,7 +21,7 @@ pub enum FilterType {
     Area,
 }
 
-impl OverpassQLUnnamed for FilterType {
+impl OverpassQL for FilterType {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
             Self::Node => write!(f, "node")?,

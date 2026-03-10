@@ -19,6 +19,7 @@ impl<'a> Into<Cow<'a, Set<'a>>> for FilterSetBuilder<'a> {
     }
 }
 
+/// Methods to create new [FilterSet]s.
 impl SetBuilder {
     pub fn all_nodes<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {

@@ -1,7 +1,7 @@
 use std::{
     fmt::Write, hash::Hash,
 };
-use crate::{OverpassQLUnnamed, OverpassQLError, SaniStr};
+use crate::{OverpassQL, OverpassQLError, SaniStr};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TagFilter<'a> {
@@ -14,7 +14,7 @@ pub enum TagFilter<'a> {
     NameValueMatches(SaniStr<'a>, SaniStr<'a>),
 }
 
-impl OverpassQLUnnamed for TagFilter<'_> {
+impl OverpassQL for TagFilter<'_> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
             Self::Exists(n) => write!(f, "[{n}]"),

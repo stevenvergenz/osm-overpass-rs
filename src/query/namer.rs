@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::Set;
 
 #[derive(Debug, Clone)]
-pub struct Namer<'a, 'b> where 'a: 'b {
+pub(crate) struct Namer<'a, 'b> where 'a: 'b {
     iter: NameIterator,
     names: HashMap<&'b Set<'a>, Option<String>>,
 }

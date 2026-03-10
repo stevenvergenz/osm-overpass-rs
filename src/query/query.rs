@@ -3,7 +3,7 @@ use std::{
     fmt::Write,
 };
 use chrono::{DateTime, Utc};
-use crate::{OverpassQLUnnamed, OverpassQLError, Set, Bbox, OverpassQLNamed, Namer};
+use crate::{OverpassQL, OverpassQLError, Set, Bbox, OverpassQLNamed, Namer};
 
 /// The amount of detail to be included in [Query]-matched [Element](crate::Element)s.
 /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
@@ -27,7 +27,7 @@ pub enum QueryVerbosity {
     //Meta,
 }
 
-impl OverpassQLUnnamed for QueryVerbosity {
+impl OverpassQL for QueryVerbosity {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
             //Self::Count => write!(f, "out count;"),
@@ -41,7 +41,7 @@ impl OverpassQLUnnamed for QueryVerbosity {
     }
 }
 
-/// The root type of this API. It serializes into a complete Overpass QL query by calling [to_oql](OverpassQLUnnamed::to_oql).
+/// The root type of this API. It serializes into a complete Overpass QL query by calling [to_oql](OverpassQL::to_oql).
 #[derive(Debug, Default)]
 pub struct Query<'a> {
     /// The length of time in seconds after which the server will abort the query.
@@ -149,7 +149,7 @@ where 'a: 'b {
     refs
 }
 
-impl<'a> OverpassQLUnnamed for Query<'a> {
+impl<'a> OverpassQL for Query<'a> {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         if let Some(d) = self.timeout_s {
             write!(f, "[timeout:{}]", d)?;

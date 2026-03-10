@@ -17,7 +17,7 @@ mod overpassql;
 pub use overpassql::*;
 
 mod namer;
-pub use namer::*;
+pub(crate) use namer::*;
 
 mod recurse;
 pub use recurse::*;

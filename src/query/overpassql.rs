@@ -30,21 +30,21 @@ impl Into<FmtError> for OverpassQLError {
 }
 
 
-pub trait OverpassQLUnnamed {
+pub trait OverpassQL {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError>;
 
     fn to_oql(&self) -> String {
         let mut buf = String::new();
 
         // Bypass format_args!() to avoid write_str with zero-length strs
-        OverpassQLUnnamed::fmt_oql(self, &mut buf)
+        OverpassQL::fmt_oql(self, &mut buf)
             .expect("an Overpass implementation returned an error unexpectedly");
         buf
     }
 }
 
 
-pub trait OverpassQLNamed<'a> {
+pub(crate) trait OverpassQLNamed<'a> {
     #[allow(unused_variables)]
     fn fmt_oql_named<'b, 'c>(&'b self, f: &mut impl Write, namer: &mut Namer<'a, 'c>)
     -> Result<(), OverpassQLError>
