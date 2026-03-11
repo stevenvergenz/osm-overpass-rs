@@ -23,7 +23,7 @@
 //! assert_eq!(query.to_oql(), [
 //!     "[bbox:47.553,-122.461,47.667,-122.201][out:json];",
 //!     r#"nw["seamark:type"="landmark"];"#,
-//!     "out body;",
+//!     "out;",
 //! ].join(""));
 //!
 //! // those landmarks should contain the Space Needle

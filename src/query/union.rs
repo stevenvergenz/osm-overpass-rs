@@ -5,8 +5,10 @@ use std::{
 };
 use crate::{Set, Namer, OverpassQLNamed, OverpassQLError};
 
+/// A [Set] that is composed of all elements found in any member set.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct UnionSet<'a>(
+    /// The collection of sets whose contents make up this set.
     pub HashSet<Cow<'a, Set<'a>>>,
 );
 
@@ -26,6 +28,7 @@ impl<'a> OverpassQLNamed<'a> for UnionSet<'a> {
 }
 
 impl<'a> UnionSet<'a> {
+    /// An iterator of the sets that must be defined before this set.
     pub fn dependencies(&self) -> IntoIter<&Set<'a>> {
         self.0.iter().map(|c| c.as_ref())
             .collect::<HashSet<_>>().into_iter()

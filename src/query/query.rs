@@ -4,8 +4,11 @@ use std::{
 };
 use chrono::{DateTime, Utc};
 use crate::{OverpassQL, OverpassQLError, Set, Bbox, OverpassQLNamed, Namer};
+#[cfg(doc)]
+use crate::{Element};
 
-/// The amount of detail to be included in [Query]-matched [Element](crate::Element)s.
+/// The amount of detail to be included in [Query]-matched [Element]s.
+/// 
 /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
 #[derive(Debug, Clone, Copy, Default)]
 pub enum QueryVerbosity {
@@ -87,6 +90,7 @@ impl<'a> AsRef<Query<'a>> for Query<'a> {
     }
 }
 
+/// Determine the order in which the sets within this query must be defined.
 fn resolve_ordering<'a, 'b>(query_set: &'b Set<'a>)
 -> Result<Vec<&'b Set<'a>>, OverpassQLError>
 where 'a: 'b {
@@ -132,6 +136,7 @@ where 'a: 'b {
     Ok(output)
 }
 
+/// Generate a lookup table for the query's set dependencies.
 fn evaluate_refs<'a, 'b>(
     set: &'b Set<'a>, 
     mut refs: HashMap<&'b Set<'a>, HashSet<&'b Set<'a>>>,
@@ -228,7 +233,7 @@ mod test {
             "[out:json];",
             r#"nw["public_transport"="platform"]->.a;"#,
             "node.a;",
-            "out body;"
+            "out;"
         ].join(""));
     }
 }

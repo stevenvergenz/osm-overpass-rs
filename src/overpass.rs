@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fmt::{Display, Formatter, Result as FResult},
 };
 use serde::Deserialize;
@@ -7,11 +8,16 @@ use crate::{Element, OverpassQLError, Query};
 mod server;
 pub use server::*;
 
+/// An error returned when a request to evaluate a [Query] fails.
 #[derive(Debug)]
 pub enum OverpassError {
+    /// There was an error serializing the query.
     Query(OverpassQLError),
+    /// There was an error communicating with the Overpass server.
     Request(reqwest::Error),
+    /// There was an error parsing the response from the Overpass server.
     Parse(serde_json::Error),
+    /// An unknown error occurred.
     Other(String),
 }
 impl Display for OverpassError {
@@ -26,13 +32,16 @@ impl Display for OverpassError {
 }
 impl std::error::Error for OverpassError {}
 
+/// The data returned from an [Overpass] [Query] evaluation.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct OverpassResult {
+    /// The [Element]s in the query set.
     pub elements: Vec<Element>,
-    //#[serde(flatten)]
-    //meta: HashMap<String, String>,
+    #[serde(flatten)]
+    pub other_fields: HashMap<String, serde_json::Value>,
 }
 
+/// Can retrieve [Element] data from OpenStreetMap that matches the provided [Query] set.
 pub trait Overpass {
     fn evaluate(&self, query: &Query<'_>) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>> + Send;
 }

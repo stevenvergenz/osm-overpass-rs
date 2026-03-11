@@ -1,5 +1,15 @@
 use std::fmt::{Display, Formatter, Result as FResult};
 
+/// Handles string sanitization for OverpassQL queries.
+/// 
+/// Wraps the input string in double-quotes and escapes any double-quotes in the original string.
+/// 
+/// Example:
+/// ```
+/// # use osm_overpass::SaniStr;
+/// let sani = SaniStr(r#"Dwayne "The Rock" Johnson"#);
+/// assert_eq!(sani.to_string(), String::from(r#""Dwayne \"The Rock\" Johnson""#))
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SaniStr<'a>(pub &'a str);
 

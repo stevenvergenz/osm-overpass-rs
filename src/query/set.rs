@@ -3,13 +3,18 @@ use std::{
     fmt::Write,
     hash::{Hash, Hasher},
 };
-use crate::{
-    FilterSet, Namer, OverpassQLError, OverpassQLNamed, UnionSet,
-};
+use crate::{FilterSet, Namer, OverpassQLError, OverpassQLNamed, UnionSet};
+#[cfg(doc)]
+use crate::{Element};
 
+/// An abstract collection of [Element]s selected from the full database based on given criteria.
+/// 
+/// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Sets)
 #[derive(Debug, Clone)]
 pub enum Set<'a> {
+    /// The standard query statement. See [FilterSet].
     Filter(FilterSet<'a>),
+    /// The union block statement. See [UnionSet].
     Union(UnionSet<'a>),
 }
 
@@ -51,6 +56,7 @@ impl<'a> OverpassQLNamed<'a> for Set<'a> {
 }
 
 impl<'a> Set<'a> {
+    /// Returns an iterator of sets that must be defined before this one.
     pub fn dependencies(&self) -> impl ExactSizeIterator<Item=&Set<'a>> {
         match self {
             Self::Filter(f) => f.dependencies(),

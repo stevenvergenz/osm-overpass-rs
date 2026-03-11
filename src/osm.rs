@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor};
 
 /// The basic component of OpenStreetMap's data model. Comes in three variants: [Node], [Way], and [Relation].
+///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Elements)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all="lowercase", tag="type")]
@@ -52,6 +53,7 @@ impl Element {
 }
 
 /// A node is one of the core elements in the OpenStreetMap data model.
+///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Node)
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Node {
@@ -62,6 +64,7 @@ pub struct Node {
 }
 
 /// A way is one of the fundamental elements of the map.
+///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Way)
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Way {
@@ -71,6 +74,7 @@ pub struct Way {
 }
 
 /// Relations are structured collections of objects - nodes, ways, and other relations.
+///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Relation)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Relation {
@@ -79,7 +83,7 @@ pub struct Relation {
     pub members: Vec<RelationMember>,
 }
 
-/// A reference to another [Node], [Way], or [Relation] from this relation, with an optional role.
+/// A reference to another [Node], [Way], or [Relation] from the owning relation, with an optional role.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RelationMember {
     #[serde(flatten)]
