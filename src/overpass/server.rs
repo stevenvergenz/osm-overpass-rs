@@ -4,6 +4,11 @@ use reqwest::Client;
 
 static CLIENT: LazyLock<Client> = LazyLock::new(|| Client::new());
 
+/// Makes an HTTP request to an Overpass API server to evaluate queries.
+///
+/// This implements [Default] with the official API server URL and a shared static HTTP client.
+/// This means you will usually not need to construct your own instance, you can use
+/// `OverpassServer::default()` directly.
 #[derive(Debug)]
 pub struct OverpassServer {
     pub client: Cow<'static, Client>,

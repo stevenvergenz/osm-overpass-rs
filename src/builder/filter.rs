@@ -139,7 +139,7 @@ impl SetBuilder {
             ..Default::default()
         })
     }
-    
+    /*
     pub fn all_derived<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Derived,
@@ -156,7 +156,7 @@ impl SetBuilder {
             ..Default::default()
         })
     }
-    
+    */
     pub fn all_areas<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Area,

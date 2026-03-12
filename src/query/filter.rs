@@ -6,15 +6,17 @@ use std::{
 use crate::{
     Bbox, Namer, OverpassQLError, OverpassQLNamed, OverpassQL, RecurseFilter, Set, TagFilter
 };
+#[cfg(doc)]
+use crate::{Node, Way, Relation};
 
 /// The type of element selected by a [FilterSet].
 #[derive(Debug, Clone, Copy, Default)]
 pub enum FilterType {
-    /// [Node](crate::Node)s
+    /// [Node]s
     Node,
-    /// [Way](crate::Way)s
+    /// [Way]s
     Way,
-    /// [Relation](crate::Relation)s
+    /// [Relation]s
     Relation,
     /// Any element type
     #[default]
@@ -22,7 +24,9 @@ pub enum FilterType {
     NodeOrWay,
     NodeOrRelation,
     WayOrRelation,
-    Derived,
+    // Derived,
+    /// Ways or relations that the server determines represent a two-dimensional area and not just
+    /// a line. [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Areas)
     Area,
 }
 
@@ -36,7 +40,7 @@ impl OverpassQL for FilterType {
             Self::NodeOrWay => write!(f, "nw")?,
             Self::NodeOrRelation => write!(f, "nr")?,
             Self::WayOrRelation => write!(f, "wr")?,
-            Self::Derived => write!(f, "derived")?,
+            // Self::Derived => write!(f, "derived")?,
             Self::Area => write!(f, "area")?,
         }
         Ok(())

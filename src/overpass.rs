@@ -37,11 +37,15 @@ impl std::error::Error for OverpassError {}
 pub struct OverpassResult {
     /// The [Element]s in the query set.
     pub elements: Vec<Element>,
+
+    /// Miscellaneous information provided by the API server, such as the API version and a timestamp.
     #[serde(flatten)]
     pub other_fields: HashMap<String, serde_json::Value>,
 }
 
 /// Can retrieve [Element] data from OpenStreetMap that matches the provided [Query] set.
 pub trait Overpass {
+    /// An async method that evaluates a [Query] against the map database and returns the
+    /// resulting [Element]s.
     fn evaluate(&self, query: &Query<'_>) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>> + Send;
 }
