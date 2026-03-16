@@ -1,4 +1,4 @@
-# osm-overpass
+# overpass-lib
 
 
 Easily create and execute [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API)

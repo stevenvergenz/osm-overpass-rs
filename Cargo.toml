@@ -1,12 +1,12 @@
 [package]
-name = "osm-overpass"
+name = "overpass-lib"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
 authors = ["Steven Vergenz"]
 description = "Easily create and execute Overpass API queries of OpenStreetMap. Supports both declarative and builder syntax for generating OverpassQL strings, a reqwest-based submission API, and type definitions for handling the query results."
 repository = "https://github.com/stevenvergenz/osm-overpass-rs"
-categories = ["science::geospatial", "api-bindings"]
+categories = ["science::geo", "api-bindings"]
 keywords = ["openstreetmap", "osm"]
 
 [dependencies]

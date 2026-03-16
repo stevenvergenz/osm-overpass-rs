@@ -22,7 +22,7 @@
 //!
 //! ```
 //! # use std::collections::HashSet;
-//! # use osm_overpass::*;
+//! # use overpass_lib::*;
 //! # tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
 //! // Let's find all the landmarks in downtown Seattle in a standard OverpassQL string.
 //! let oql = [

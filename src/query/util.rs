@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter, Result as FResult};
 /// 
 /// Example:
 /// ```
-/// # use osm_overpass::SaniStr;
+/// # use overpass_lib::SaniStr;
 /// let sani = SaniStr(r#"Dwayne "The Rock" Johnson"#);
 /// assert_eq!(sani.to_string(), String::from(r#""Dwayne \"The Rock\" Johnson""#))
 /// ```
