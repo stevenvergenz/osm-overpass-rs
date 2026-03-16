@@ -8,7 +8,7 @@ fn main() {
         &PathBuf::from("."),
         &mut File::open("src/lib.rs").unwrap(),
         None,
-        true, false, true, true,
+        true, true, true, true,
     );
     match r {
         Ok(text) => {

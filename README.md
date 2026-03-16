@@ -67,4 +67,61 @@ let res = OverpassServer::default().evaluate(&dec_query).await.unwrap();
 assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle"))));
 ```
 
+## Language Support
+
+* Settings
+    * ✅ timeout
+    * ✅ maxsize
+    * ✅ bbox
+    * ✅ date
+    * ✅ diff
+    * ❌ adiff
+    * ❌ out count
+    * ✅ out verbosity
+    * ❌ out modificators
+    * ❌ out bbox
+    * ❌ out sort order
+    * ❌ out limit
+* Sets
+    * ✅ union
+    * ❌ difference
+    * ✅ intersection
+    * ❌ if-block
+    * ❌ foreach
+    * ❌ for
+    * ❌ complete
+    * ❌ retro
+    * ❌ compare
+    * ❌ recurse up
+    * ❌ recurse up relations
+    * ❌ recurse down
+    * ❌ recurse down relations
+    * ❌ is_in
+    * ❌ timeline
+    * ❌ local
+    * ❌ convert
+    * ❌ make
+    * Filters
+        * ✅ has-kv
+        * ✅ bbox
+        * ✅ recurse refs
+        * ❌ recurse way cnt/link
+        * ✅ input set
+        * ✅ id
+        * ❌ around
+        * ❌ poly
+        * ❌ newer
+        * ❌ changed
+        * ❌ user
+        * ❌ area
+        * ❌ pivot
+        * ❌ if
+    * ❌ evaluators
+
+## Contributing
+
+Issues and pull requests welcome through
+[GitHub](https://github.com/stevenvergenz/osm-overpass-rs].
+
+
 License: MIT
