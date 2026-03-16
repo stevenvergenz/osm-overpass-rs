@@ -60,7 +60,7 @@ pub struct FilterSet<'a> {
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#The_Query_Statement)
     pub filter_type: FilterType,
 
-    /// Only elements in all of these sets are eligible to be in this set.
+    /// Only elements common to all of these sets are eligible to be in this set.
     /// An empty collection means all elements are eligible.
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#By_input_set_.28.setname.29)
     pub inputs: HashSet<Cow<'a, Set<'a>>>,
