@@ -121,7 +121,7 @@ assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle")
 ## Contributing
 
 Issues and pull requests welcome through
-[GitHub](https://github.com/stevenvergenz/osm-overpass-rs].
+[GitHub](https://github.com/stevenvergenz/osm-overpass-rs).
 
 
 License: MIT

@@ -123,7 +123,7 @@
 //! # Contributing
 //!
 //! Issues and pull requests welcome through
-//! [GitHub](https://github.com/stevenvergenz/osm-overpass-rs].
+//! [GitHub](https://github.com/stevenvergenz/osm-overpass-rs).
 //!
 
 #[cfg(doc)]
