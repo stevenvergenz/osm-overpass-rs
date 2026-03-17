@@ -89,7 +89,9 @@ impl<'a> AsRef<Query<'a>> for Query<'a> {
 }
 
 /// Determine the order in which the sets within this query must be defined.
-fn resolve_ordering<'a, 'b>(query_set: &'b Set<'a>) -> Result<Vec<&'b Set<'a>>, OverpassQLError>
+fn resolve_ordering<'a, 'b>(
+    query_set: &'b Set<'a>,
+) -> Result<Vec<&'b Set<'a>>, OverpassQLError>
 where
     'a: 'b,
 {
@@ -200,7 +202,10 @@ mod test {
     fn resolve_ordering() {
         let q1 = Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrWay,
-            tag_filters: HashSet::from([TagFilter::equals("public_transport", "platform")]),
+            tag_filters: HashSet::from([TagFilter::equals(
+                "public_transport",
+                "platform",
+            )]),
             ..Default::default()
         });
         let q2 = Set::Filter(FilterSet {
@@ -216,7 +221,10 @@ mod test {
     fn fmt_oql() {
         let q1 = Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrWay,
-            tag_filters: HashSet::from([TagFilter::equals("public_transport", "platform")]),
+            tag_filters: HashSet::from([TagFilter::equals(
+                "public_transport",
+                "platform",
+            )]),
             ..Default::default()
         });
         let q2 = Set::Filter(FilterSet {

@@ -25,7 +25,10 @@ impl Default for OverpassServer {
 }
 
 impl Overpass for OverpassServer {
-    async fn evaluate(&self, query: &Query<'_>) -> Result<OverpassResult, OverpassError> {
+    async fn evaluate(
+        &self,
+        query: &Query<'_>,
+    ) -> Result<OverpassResult, OverpassError> {
         let mut body = String::new();
         query
             .fmt_oql(&mut body)
@@ -45,7 +48,9 @@ impl Overpass for OverpassServer {
 
         match res.bytes().await {
             Err(e) => Err(OverpassError::Request(e)),
-            Ok(b) => serde_json::from_slice(&b).map_err(|e| OverpassError::Parse(e)),
+            Ok(b) => {
+                serde_json::from_slice(&b).map_err(|e| OverpassError::Parse(e))
+            }
         }
     }
 }

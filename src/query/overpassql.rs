@@ -1,5 +1,7 @@
 use crate::Namer;
-use std::fmt::{Display, Error as FmtError, Formatter, Result as FResult, Write};
+use std::fmt::{
+    Display, Error as FmtError, Formatter, Result as FResult, Write,
+};
 
 /// An error returned when a [Query](crate::Query) cannot produce a valid OverpassQL query string.
 #[derive(Debug, Clone)]
@@ -42,8 +44,9 @@ pub trait OverpassQL {
         let mut buf = String::new();
 
         // Bypass format_args!() to avoid write_str with zero-length strs
-        OverpassQL::fmt_oql(self, &mut buf)
-            .expect("an OverpassQL implementation returned an error unexpectedly");
+        OverpassQL::fmt_oql(self, &mut buf).expect(
+            "an OverpassQL implementation returned an error unexpectedly",
+        );
         buf
     }
 }

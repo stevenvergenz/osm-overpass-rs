@@ -1,5 +1,6 @@
 use crate::{
-    Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, RecurseFilter, Set, TagFilter,
+    Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, RecurseFilter,
+    Set, TagFilter,
 };
 #[cfg(doc)]
 use crate::{Node, Relation, Way};

@@ -4,7 +4,10 @@ use std::{borrow::Cow, collections::HashSet};
 /// Trait to daisy-chain [SetBuilder]s together into [UnionSetBuilder]s.
 pub trait UnionWith<'a> {
     /// Combine this [Set] together with another into a [UnionSet].
-    fn union_with(self, other: impl Into<Cow<'a, Set<'a>>>) -> UnionSetBuilder<'a>;
+    fn union_with(
+        self,
+        other: impl Into<Cow<'a, Set<'a>>>,
+    ) -> UnionSetBuilder<'a>;
 }
 
 /// A convenient builder API for [UnionSet].
@@ -36,7 +39,10 @@ impl<'a> IntoIterator for UnionSetBuilder<'a> {
 }
 
 impl<'a> UnionWith<'a> for FilterSetBuilder<'a> {
-    fn union_with(self, other: impl Into<Cow<'a, Set<'a>>>) -> UnionSetBuilder<'a> {
+    fn union_with(
+        self,
+        other: impl Into<Cow<'a, Set<'a>>>,
+    ) -> UnionSetBuilder<'a> {
         UnionSetBuilder(UnionSet(HashSet::from([self.into(), other.into()])))
     }
 }
@@ -50,7 +56,9 @@ impl<'a> UnionWith<'a> for UnionSetBuilder<'a> {
 
 impl SetBuilder {
     /// Collect the provided sets into a new [UnionSet]
-    pub fn union<'a, T>(sets: impl IntoIterator<Item = T>) -> UnionSetBuilder<'a>
+    pub fn union<'a, T>(
+        sets: impl IntoIterator<Item = T>,
+    ) -> UnionSetBuilder<'a>
     where
         T: Into<Cow<'a, Set<'a>>>,
     {

@@ -50,5 +50,6 @@ pub trait Overpass {
     fn evaluate(
         &self,
         query: &Query<'_>,
-    ) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>> + Send;
+    ) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>>
+    + Send;
 }

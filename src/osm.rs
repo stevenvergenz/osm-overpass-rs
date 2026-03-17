@@ -103,7 +103,10 @@ struct OptionalStringVisitor;
 impl<'de> Visitor<'de> for OptionalStringVisitor {
     type Value = Option<String>;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(
+        &self,
+        formatter: &mut std::fmt::Formatter,
+    ) -> std::fmt::Result {
         write!(formatter, "a string")
     }
 
@@ -111,7 +114,11 @@ impl<'de> Visitor<'de> for OptionalStringVisitor {
     where
         E: serde::de::Error,
     {
-        if v.is_empty() { Ok(None) } else { Ok(Some(v)) }
+        if v.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(v))
+        }
     }
 }
 

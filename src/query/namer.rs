@@ -65,7 +65,8 @@ mod test {
                 .take(12)
                 .collect::<Vec<String>>(),
             vec![
-                "a", "ba", "ca", "da", "ea", "fa", "ga", "ha", "ia", "ja", "ka", "la",
+                "a", "ba", "ca", "da", "ea", "fa", "ga", "ha", "ia", "ja",
+                "ka", "la",
             ]
         );
         assert_eq!(
@@ -74,7 +75,8 @@ mod test {
                 .take(12)
                 .collect::<Vec<String>>(),
             vec![
-                "a", "baa", "caa", "daa", "eaa", "faa", "gaa", "haa", "iaa", "jaa", "kaa", "laa",
+                "a", "baa", "caa", "daa", "eaa", "faa", "gaa", "haa", "iaa",
+                "jaa", "kaa", "laa",
             ]
         );
     }
