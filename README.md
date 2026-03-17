@@ -22,6 +22,9 @@ Once your set is specified, you:
 ## Examples
 
 ```rust
+# use std::collections::HashSet;
+# use overpass_lib::*;
+# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
 // Let's find all the landmarks in downtown Seattle in a standard OverpassQL string.
 let oql = [
     "[bbox:47.553,-122.461,47.667,-122.201][out:json];",
@@ -47,7 +50,7 @@ let dec_query = Query {
 assert_eq!(&oql, &dec_query.to_oql());
 
 // Using the builder API it looks like this:
-let builder_query: Query = SetBuilder::all_nodes_or_ways()
+let builder_query: Query = SetBuilder::nodes_or_ways()
     .with_tag_value("seamark:type", "landmark")
     .to_query()
     .search_bbox(Bbox {
@@ -64,6 +67,7 @@ let res = OverpassServer::default().evaluate(&dec_query).await.unwrap();
 
 // One of those landmarks should be the Space Needle.
 assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle"))));
+# });
 ```
 
 ## Language Support
@@ -122,5 +126,7 @@ assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle")
 Issues and pull requests welcome through
 [GitHub](https://github.com/stevenvergenz/osm-overpass-rs).
 
-
 License: MIT
+
+[Set]: https://docs.rs/overpass-lib/latest/overpass_lib/enum.Set.html
+

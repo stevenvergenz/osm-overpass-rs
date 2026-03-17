@@ -37,67 +37,25 @@ impl<'a> IntoIterator for FilterSetBuilder<'a> {
 /// Methods to create new [FilterSet]s.
 impl SetBuilder {
     /// Start a new filter set containing [Node]s, i.e. [FilterType::Node].
-    pub fn all_nodes<'a>() -> FilterSetBuilder<'a> {
+    pub fn nodes<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Node,
-            ..Default::default()
-        })
-    }
-
-    /// Start a new filter set containing the [Node]s common to all provided sets. See [FilterSet::inputs].
-    pub fn nodes_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::Node,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
 
     /// Start a new filter set containing [Way]s, i.e. [FilterType::Way].
-    pub fn all_ways<'a>() -> FilterSetBuilder<'a> {
+    pub fn ways<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Way,
-            ..Default::default()
-        })
-    }
-
-    /// Start a new filter set containing the [Way]s common to all provided sets. See [FilterSet::inputs].
-    pub fn ways_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::Way,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
 
     /// Start a new filter set containing [Relation]s, i.e. [FilterType::Relation].
-    pub fn all_relations<'a>() -> FilterSetBuilder<'a> {
+    pub fn relations<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Relation,
-            ..Default::default()
-        })
-    }
-
-    /// Start a new filter set containing the [Relation]s common to all provided sets. See [FilterSet::inputs].
-    pub fn relations_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::Relation,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
@@ -110,127 +68,59 @@ impl SetBuilder {
         })
     }
 
-    /// Start a new filter set containing the elements common to all provided sets. See [FilterSet::inputs].
-    pub fn any_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::Any,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
-            ..Default::default()
-        })
-    }
-
     /// Start a new filter set containing [Node]s or [Way]s, i.e. [FilterType::NodeOrWay].
-    pub fn all_nodes_or_ways<'a>() -> FilterSetBuilder<'a> {
+    pub fn nodes_or_ways<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::NodeOrWay,
-            ..Default::default()
-        })
-    }
-
-    /// Start a new filter set containing [Node]s and [Way]s common to all provided sets. See [FilterSet::inputs].
-    pub fn nodes_or_ways_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::NodeOrWay,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
 
     /// Start a new filter set containing [Node]s or [Relation]s, i.e. [FilterType::NodeOrRelation].
-    pub fn all_nodes_or_relations<'a>() -> FilterSetBuilder<'a> {
+    pub fn nodes_or_relations<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::NodeOrRelation,
-            ..Default::default()
-        })
-    }
-
-    /// Start a new filter set containing the [Node]s and [Relation]s common to all provided sets. See [FilterSet::inputs].
-    pub fn nodes_or_relations_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::NodeOrRelation,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
 
     /// Start a new filter set containing [Way]s or [Relation]s, i.e. [FilterType::WayOrRelation].
-    pub fn all_ways_or_relations<'a>() -> FilterSetBuilder<'a> {
+    pub fn ways_or_relations<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::WayOrRelation,
             ..Default::default()
         })
     }
 
-    /// Start a new filter set containing the [Way]s and [Relation]s common to all provided sets. See [FilterSet::inputs].
-    pub fn ways_or_relations_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::WayOrRelation,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
-            ..Default::default()
-        })
-    }
     /*
-    pub fn all_derived<'a>() -> FilterSetBuilder<'a> {
+    pub fn derived<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Derived,
-            ..Default::default()
-        })
-    }
-
-    pub fn derived_from<'a, T>(sets: impl IntoIterator<Item=T>)
-    -> FilterSetBuilder<'a>
-    where T: Into<Cow<'a, Set<'a>>> {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::Derived,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
     */
-    /// Start a new filter set containing elements identified as areas, i.e. [FilterType::Area].
-    pub fn all_areas<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
-            filter_type: FilterType::Area,
-            ..Default::default()
-        })
-    }
 
-    /// Start a new filter set containing the [Area](FilterType::Area) elements common to all provided sets. See [FilterSet::inputs].
-    pub fn areas_from<'a, T>(
-        sets: impl IntoIterator<Item = T>,
-    ) -> FilterSetBuilder<'a>
-    where
-        T: Into<Cow<'a, Set<'a>>>,
-    {
+    /// Start a new filter set containing elements identified as areas, i.e. [FilterType::Area].
+    pub fn areas<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type: FilterType::Area,
-            inputs: sets.into_iter().map(|i| i.into()).collect(),
             ..Default::default()
         })
     }
 }
 
 impl<'a> FilterSetBuilder<'a> {
+    pub fn from<T>(mut self, sets: impl IntoIterator<Item = T>) -> Self
+    where
+        T: Into<Cow<'a, Set<'a>>>,
+    {
+        for i in sets.into_iter() {
+            self.0.inputs.insert(i.into());
+        }
+        self
+    }
+
     /// Restrict this set to only elements with the given identifier. See [FilterSet::id_filters].
     pub fn with_id(mut self, id: i64) -> Self {
         self.0.id_filters.clear();
@@ -552,9 +442,9 @@ mod test {
     use super::*;
 
     fn _all_nodes_from() {
-        let _ = SetBuilder::nodes_from(SetBuilder::all_nodes());
+        let _ = SetBuilder::nodes().from(SetBuilder::nodes());
 
-        let set: Set = SetBuilder::all_ways().into();
-        let _ = SetBuilder::nodes_from([&set]);
+        let set: Set = SetBuilder::ways().into();
+        let _ = SetBuilder::nodes().from([&set]);
     }
 }
