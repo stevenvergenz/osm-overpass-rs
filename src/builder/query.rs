@@ -1,7 +1,9 @@
-use chrono::{DateTime, Utc};
-use crate::{Bbox, FilterSet, FilterSetBuilder, Query, QueryVerbosity, Set, UnionSet, UnionSetBuilder};
 #[cfg(doc)]
 use crate::SetBuilder;
+use crate::{
+    Bbox, FilterSet, FilterSetBuilder, Query, QueryVerbosity, Set, UnionSet, UnionSetBuilder,
+};
+use chrono::{DateTime, Utc};
 
 /// Trait to convert [SetBuilder]s into [QueryBuilder]s unambiguously in addition to
 /// [`Into<QueryBuilder>`].
@@ -62,7 +64,11 @@ impl<'a> QueryBuilder<'a> {
     }
 
     /// Set [Query::diff] with an end date.
-    pub fn diff_range(mut self, start: impl Into<DateTime<Utc>>, end: impl Into<DateTime<Utc>>) -> Self {
+    pub fn diff_range(
+        mut self,
+        start: impl Into<DateTime<Utc>>,
+        end: impl Into<DateTime<Utc>>,
+    ) -> Self {
         self.0.diff = Some((start.into(), Some(end.into())));
         self
     }

@@ -1,8 +1,11 @@
-use std::collections::HashMap;
 use crate::Set;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Namer<'a, 'b> where 'a: 'b {
+pub(crate) struct Namer<'a, 'b>
+where
+    'a: 'b,
+{
     iter: NameIterator,
     names: HashMap<&'b Set<'a>, Option<String>>,
 }
@@ -16,9 +19,11 @@ impl<'a, 'b> Namer<'a, 'b> {
     }
 
     pub fn get_or_assign(&mut self, item: &'b Set<'a>) -> Option<&str> {
-        self.names.entry(item)
+        self.names
+            .entry(item)
             .or_insert_with(|| self.iter.next())
-            .as_ref().map(|s| s.as_str())
+            .as_ref()
+            .map(|s| s.as_str())
     }
 }
 
@@ -35,7 +40,9 @@ impl Iterator for NameIterator {
         loop {
             output.push(char::from_u32('a' as u32 + (div % 26)).unwrap());
             div /= 26;
-            if div == 0 { break; }
+            if div == 0 {
+                break;
+            }
         }
         self.sequence_index += 1;
         Some(output.into_iter().rev().collect())
@@ -48,15 +55,27 @@ mod test {
 
     #[test]
     fn name_iterator() {
-        assert_eq!(NameIterator::default().take(12).collect::<Vec<String>>(), vec![
-            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
-        ]);
-        assert_eq!(NameIterator::default().step_by(26).take(12).collect::<Vec<String>>(), vec![
-            "a", "ba", "ca", "da", "ea", "fa", "ga", "ha", "ia", "ja", "ka", "la",
-        ]);
-        assert_eq!(NameIterator::default().step_by(26*26).take(12).collect::<Vec<String>>(), vec![
-            "a", "baa", "caa", "daa", "eaa", "faa", "gaa", "haa", "iaa", "jaa", "kaa", "laa",
-        ]);
+        assert_eq!(
+            NameIterator::default().take(12).collect::<Vec<String>>(),
+            vec!["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",]
+        );
+        assert_eq!(
+            NameIterator::default()
+                .step_by(26)
+                .take(12)
+                .collect::<Vec<String>>(),
+            vec![
+                "a", "ba", "ca", "da", "ea", "fa", "ga", "ha", "ia", "ja", "ka", "la",
+            ]
+        );
+        assert_eq!(
+            NameIterator::default()
+                .step_by(26 * 26)
+                .take(12)
+                .collect::<Vec<String>>(),
+            vec![
+                "a", "baa", "caa", "daa", "eaa", "faa", "gaa", "haa", "iaa", "jaa", "kaa", "laa",
+            ]
+        );
     }
-
 }

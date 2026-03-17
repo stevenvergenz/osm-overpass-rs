@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter, Write, Result as FResult, Error as FmtError};
 use crate::Namer;
+use std::fmt::{Display, Error as FmtError, Formatter, Result as FResult, Write};
 
 /// An error returned when a [Query](crate::Query) cannot produce a valid OverpassQL query string.
 #[derive(Debug, Clone)]
@@ -48,10 +48,13 @@ pub trait OverpassQL {
     }
 }
 
-
 pub(crate) trait OverpassQLNamed<'a> {
     #[allow(unused_variables)]
-    fn fmt_oql_named<'b, 'c>(&'b self, f: &mut impl Write, namer: &mut Namer<'a, 'c>)
-    -> Result<(), OverpassQLError>
-    where 'b: 'c;
+    fn fmt_oql_named<'b, 'c>(
+        &'b self,
+        f: &mut impl Write,
+        namer: &mut Namer<'a, 'c>,
+    ) -> Result<(), OverpassQLError>
+    where
+        'b: 'c;
 }

@@ -1,5 +1,5 @@
-use std::{borrow::Cow, collections::HashSet};
 use crate::{FilterSetBuilder, Set, SetBuilder, UnionSet, builder::Builder};
+use std::{borrow::Cow, collections::HashSet};
 
 /// Trait to daisy-chain [SetBuilder]s together into [UnionSetBuilder]s.
 pub trait UnionWith<'a> {
@@ -50,9 +50,10 @@ impl<'a> UnionWith<'a> for UnionSetBuilder<'a> {
 
 impl SetBuilder {
     /// Collect the provided sets into a new [UnionSet]
-    pub fn union<'a, T>(sets: impl IntoIterator<Item=T>) -> UnionSetBuilder<'a>
-    where T: Into<Cow<'a, Set<'a>>> {
+    pub fn union<'a, T>(sets: impl IntoIterator<Item = T>) -> UnionSetBuilder<'a>
+    where
+        T: Into<Cow<'a, Set<'a>>>,
+    {
         UnionSetBuilder(sets.into_iter().collect())
     }
 }
-

@@ -1,12 +1,10 @@
-use std::{
-    fmt::Write, hash::Hash,
-};
-use crate::{OverpassQL, OverpassQLError, SaniStr};
 #[cfg(doc)]
 use crate::FilterSet;
+use crate::{OverpassQL, OverpassQLError, SaniStr};
+use std::{fmt::Write, hash::Hash};
 
 /// The set of conditions that an element's tags may or may not satisfy. Used to evaluate the contents of [FilterSet]s.
-/// 
+///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#By_tag_.28has-kv.29)
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TagFilter<'a> {
@@ -78,4 +76,3 @@ impl<'a> TagFilter<'a> {
         Self::NameValueMatches(SaniStr(name_pat), SaniStr(value_pat))
     }
 }
-

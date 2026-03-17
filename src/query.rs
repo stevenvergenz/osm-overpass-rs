@@ -4,7 +4,7 @@ pub use query::*;
 mod set;
 pub use set::*;
 
-mod filter; 
+mod filter;
 pub use filter::*;
 
 mod tag;

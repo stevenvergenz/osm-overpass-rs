@@ -1,13 +1,13 @@
-use std::{
-    borrow::Cow,
-    collections::{hash_set::IntoIter, HashSet},
-    fmt::Write,
-};
 use crate::{
-    Bbox, Namer, OverpassQLError, OverpassQLNamed, OverpassQL, RecurseFilter, Set, TagFilter
+    Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, RecurseFilter, Set, TagFilter,
 };
 #[cfg(doc)]
-use crate::{Node, Way, Relation};
+use crate::{Node, Relation, Way};
+use std::{
+    borrow::Cow,
+    collections::{HashSet, hash_set::IntoIter},
+    fmt::Write,
+};
 
 /// The type of element selected by a [FilterSet].
 #[derive(Debug, Clone, Copy, Default)]
@@ -49,7 +49,10 @@ impl OverpassQL for FilterType {
 
 impl<'a> Into<Set<'a>> for FilterType {
     fn into(self) -> Set<'a> {
-        Set::Filter(FilterSet { filter_type: self, ..Default::default() })
+        Set::Filter(FilterSet {
+            filter_type: self,
+            ..Default::default()
+        })
     }
 }
 
@@ -84,9 +87,14 @@ pub struct FilterSet<'a> {
 }
 
 impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
-    fn fmt_oql_named<'b, 'c>(&'b self, f: &mut impl Write, namer: &mut Namer<'a, 'c>)
-    -> Result<(), OverpassQLError>
-    where 'b: 'c {
+    fn fmt_oql_named<'b, 'c>(
+        &'b self,
+        f: &mut impl Write,
+        namer: &mut Namer<'a, 'c>,
+    ) -> Result<(), OverpassQLError>
+    where
+        'b: 'c,
+    {
         self.filter_type.fmt_oql(f)?;
 
         for input in &self.inputs {
@@ -117,7 +125,7 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
         for filter in &self.recurse_filters {
             filter.fmt_oql_named(f, namer)?;
         }
-        
+
         Ok(())
     }
 }
@@ -125,8 +133,11 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
 impl<'a> FilterSet<'a> {
     /// The sets that must be defined before this set.
     pub fn dependencies(&self) -> IntoIter<&Set<'a>> {
-        self.inputs.iter().map(|i| i.as_ref())
+        self.inputs
+            .iter()
+            .map(|i| i.as_ref())
             .chain(self.recurse_filters.iter().map(|r| r.input()))
-            .collect::<HashSet<_>>().into_iter()
+            .collect::<HashSet<_>>()
+            .into_iter()
     }
 }

@@ -1,9 +1,9 @@
 use std::fmt::{Display, Formatter, Result as FResult};
 
 /// Handles string sanitization for OverpassQL queries.
-/// 
+///
 /// Wraps the input string in double-quotes and escapes any double-quotes in the original string.
-/// 
+///
 /// Example:
 /// ```
 /// # use overpass_lib::SaniStr;
@@ -29,4 +29,3 @@ impl Display for SaniStr<'_> {
         write!(f, r#"""#)
     }
 }
-

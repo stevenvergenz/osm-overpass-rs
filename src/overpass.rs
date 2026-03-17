@@ -1,9 +1,9 @@
+use crate::{Element, OverpassQLError, Query};
+use serde::Deserialize;
 use std::{
     collections::HashMap,
     fmt::{Display, Formatter, Result as FResult},
 };
-use serde::Deserialize;
-use crate::{Element, OverpassQLError, Query};
 
 mod server;
 pub use server::*;
@@ -47,5 +47,8 @@ pub struct OverpassResult {
 pub trait Overpass {
     /// An async method that evaluates a [Query] against the map database and returns the
     /// resulting [Element]s.
-    fn evaluate(&self, query: &Query<'_>) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>> + Send;
+    fn evaluate(
+        &self,
+        query: &Query<'_>,
+    ) -> impl std::future::Future<Output = Result<OverpassResult, OverpassError>> + Send;
 }

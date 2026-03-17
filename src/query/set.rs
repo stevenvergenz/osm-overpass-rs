@@ -1,14 +1,15 @@
+#[cfg(doc)]
+use crate::Element;
+use crate::{FilterSet, Namer, OverpassQLError, OverpassQLNamed, UnionSet};
 use std::{
     borrow::Cow,
+    collections::HashSet,
     fmt::Write,
     hash::{Hash, Hasher},
 };
-use crate::{FilterSet, Namer, OverpassQLError, OverpassQLNamed, UnionSet};
-#[cfg(doc)]
-use crate::{Element};
 
 /// An abstract collection of [Element]s selected from the full database based on given criteria.
-/// 
+///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Sets)
 #[derive(Debug, Clone)]
 pub enum Set<'a> {
@@ -16,6 +17,8 @@ pub enum Set<'a> {
     Filter(FilterSet<'a>),
     /// The union block statement. See [UnionSet].
     Union(UnionSet<'a>),
+    /// A string of raw OverpassQL that generates a set. May cause the query to not compile!
+    Raw(String),
 }
 
 impl Default for Set<'_> {
@@ -37,15 +40,19 @@ impl<'a> From<UnionSet<'a>> for Set<'a> {
 }
 
 impl<'a> OverpassQLNamed<'a> for Set<'a> {
-    fn fmt_oql_named<'b, 'c>(&'b self,
+    fn fmt_oql_named<'b, 'c>(
+        &'b self,
         f: &mut impl Write,
         namer: &mut Namer<'a, 'c>,
     ) -> Result<(), OverpassQLError>
-    where 'b: 'c {
+    where
+        'b: 'c,
+    {
         match self {
-            Self::Filter(filter) => filter.fmt_oql_named(f, namer),
-            Self::Union(union) => union.fmt_oql_named(f, namer),
-        }?;
+            Self::Filter(filter) => filter.fmt_oql_named(f, namer)?,
+            Self::Union(union) => union.fmt_oql_named(f, namer)?,
+            Self::Raw(raw) => write!(f, "{raw}")?,
+        };
 
         if let Some(name) = namer.get_or_assign(self) {
             write!(f, "->.{name}")?;
@@ -57,10 +64,11 @@ impl<'a> OverpassQLNamed<'a> for Set<'a> {
 
 impl<'a> Set<'a> {
     /// Returns an iterator of sets that must be defined before this one.
-    pub fn dependencies(&self) -> impl ExactSizeIterator<Item=&Set<'a>> {
+    pub fn dependencies(&self) -> impl ExactSizeIterator<Item = &Set<'a>> {
         match self {
             Self::Filter(f) => f.dependencies(),
             Self::Union(u) => u.dependencies(),
+            Self::Raw(_) => HashSet::new().into_iter(),
         }
     }
 }
@@ -89,4 +97,3 @@ impl<'a> Into<Cow<'a, Set<'a>>> for &'a Set<'a> {
         Cow::Borrowed(self)
     }
 }
-

@@ -1,19 +1,18 @@
+#[cfg(doc)]
+use crate::Element;
+use crate::{Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, Set};
+use chrono::{DateTime, Utc};
 use std::{
     collections::{HashMap, HashSet},
     fmt::Write,
 };
-use chrono::{DateTime, Utc};
-use crate::{OverpassQL, OverpassQLError, Set, Bbox, OverpassQLNamed, Namer};
-#[cfg(doc)]
-use crate::{Element};
 
 /// The amount of detail to be included in [Query]-matched [Element]s.
-/// 
+///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
 #[derive(Debug, Clone, Copy, Default)]
 pub enum QueryVerbosity {
     //Count,
-
     /// Include the element type, ID, coordinates/members, and tags.
     #[default]
     Body,
@@ -26,7 +25,6 @@ pub enum QueryVerbosity {
 
     /// Include the element type, ID, and tags only.
     Tags,
-
     //Meta,
 }
 
@@ -91,9 +89,10 @@ impl<'a> AsRef<Query<'a>> for Query<'a> {
 }
 
 /// Determine the order in which the sets within this query must be defined.
-fn resolve_ordering<'a, 'b>(query_set: &'b Set<'a>)
--> Result<Vec<&'b Set<'a>>, OverpassQLError>
-where 'a: 'b {
+fn resolve_ordering<'a, 'b>(query_set: &'b Set<'a>) -> Result<Vec<&'b Set<'a>>, OverpassQLError>
+where
+    'a: 'b,
+{
     // for {k: [v]}, v must be defined before k
     let mut refs = evaluate_refs(query_set, HashMap::new());
 
@@ -129,7 +128,6 @@ where 'a: 'b {
                     refs.get_mut(referent).unwrap().remove(next);
                 }
             }
-            
         }
     }
 
@@ -138,12 +136,15 @@ where 'a: 'b {
 
 /// Generate a lookup table for the query's set dependencies.
 fn evaluate_refs<'a, 'b>(
-    set: &'b Set<'a>, 
+    set: &'b Set<'a>,
     mut refs: HashMap<&'b Set<'a>, HashSet<&'b Set<'a>>>,
 ) -> HashMap<&'b Set<'a>, HashSet<&'b Set<'a>>>
-where 'a: 'b {
+where
+    'a: 'b,
+{
     let deps = refs.entry(set).or_insert(HashSet::new());
-    let fresh = set.dependencies()
+    let fresh = set
+        .dependencies()
         .filter(|s| deps.insert(s))
         .collect::<Vec<_>>();
 
@@ -191,17 +192,15 @@ impl<'a> OverpassQL for Query<'a> {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::Cow;
     use super::*;
     use crate::{FilterSet, FilterType, TagFilter};
+    use std::borrow::Cow;
 
     #[test]
     fn resolve_ordering() {
         let q1 = Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrWay,
-            tag_filters: HashSet::from([
-                TagFilter::equals("public_transport", "platform"),
-            ]),
+            tag_filters: HashSet::from([TagFilter::equals("public_transport", "platform")]),
             ..Default::default()
         });
         let q2 = Set::Filter(FilterSet {
@@ -217,9 +216,7 @@ mod test {
     fn fmt_oql() {
         let q1 = Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrWay,
-            tag_filters: HashSet::from([
-                TagFilter::equals("public_transport", "platform"),
-            ]),
+            tag_filters: HashSet::from([TagFilter::equals("public_transport", "platform")]),
             ..Default::default()
         });
         let q2 = Set::Filter(FilterSet {
@@ -229,11 +226,15 @@ mod test {
         });
         let q = Query::from(q2);
 
-        assert_eq!(q.to_oql(), vec![
-            "[out:json];",
-            r#"nw["public_transport"="platform"]->.a;"#,
-            "node.a;",
-            "out;"
-        ].join(""));
+        assert_eq!(
+            q.to_oql(),
+            vec![
+                "[out:json];",
+                r#"nw["public_transport"="platform"]->.a;"#,
+                "node.a;",
+                "out;"
+            ]
+            .join("")
+        );
     }
 }

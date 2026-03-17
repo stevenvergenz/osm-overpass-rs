@@ -1,11 +1,11 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor};
+use std::collections::HashMap;
 
 /// The basic component of OpenStreetMap's data model. Comes in three variants: [Node], [Way], and [Relation].
 ///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Elements)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all="lowercase", tag="type")]
+#[serde(rename_all = "lowercase", tag = "type")]
 pub enum Element {
     Node(Node),
     Way(Way),
@@ -42,13 +42,13 @@ impl Element {
     }
 
     /// An iterator of tag values on this element, composed of key/value tuples.
-    pub fn tags(&self) -> impl ExactSizeIterator<Item=(&str, &str)> {
+    pub fn tags(&self) -> impl ExactSizeIterator<Item = (&str, &str)> {
         let tags = match self {
             Self::Node(n) => &n.tags,
             Self::Way(w) => &w.tags,
             Self::Relation(r) => &r.tags,
         };
-        tags.iter().map(|(k,v)| (k.as_str(), v.as_str()))
+        tags.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
 }
 
@@ -92,7 +92,10 @@ pub struct RelationMember {
     pub role: Option<String>,
 }
 
-fn skip_empty<'de, D>(deserializer: D) -> Result<Option<String>, D::Error> where D: Deserializer<'de> {
+fn skip_empty<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
     deserializer.deserialize_string(OptionalStringVisitor)
 }
 
@@ -104,12 +107,11 @@ impl<'de> Visitor<'de> for OptionalStringVisitor {
         write!(formatter, "a string")
     }
 
-    fn visit_string<E>(self, v: String) -> Result<Self::Value, E> where E: serde::de::Error {
-        if v.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(v))
-        }
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        if v.is_empty() { Ok(None) } else { Ok(Some(v)) }
     }
 }
 

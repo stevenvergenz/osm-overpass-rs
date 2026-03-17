@@ -1,9 +1,9 @@
+use crate::{Namer, OverpassQLError, OverpassQLNamed, Set};
 use std::{
     borrow::Cow,
     collections::{HashSet, hash_set::IntoIter},
     fmt::Write,
 };
-use crate::{Set, Namer, OverpassQLNamed, OverpassQLError};
 
 /// A [Set] that is composed of all elements found in any member set.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -13,9 +13,14 @@ pub struct UnionSet<'a>(
 );
 
 impl<'a> OverpassQLNamed<'a> for UnionSet<'a> {
-    fn fmt_oql_named<'b, 'c>(&'b self, f: &mut impl Write, namer: &mut Namer<'a, 'c>)
-    -> Result<(), OverpassQLError>
-    where 'b: 'c {
+    fn fmt_oql_named<'b, 'c>(
+        &'b self,
+        f: &mut impl Write,
+        namer: &mut Namer<'a, 'c>,
+    ) -> Result<(), OverpassQLError>
+    where
+        'b: 'c,
+    {
         write!(f, "(")?;
         for i in &self.0 {
             if let Some(n) = namer.get_or_assign(i) {
@@ -30,13 +35,18 @@ impl<'a> OverpassQLNamed<'a> for UnionSet<'a> {
 impl<'a> UnionSet<'a> {
     /// An iterator of the sets that must be defined before this set.
     pub fn dependencies(&self) -> IntoIter<&Set<'a>> {
-        self.0.iter().map(|c| c.as_ref())
-            .collect::<HashSet<_>>().into_iter()
+        self.0
+            .iter()
+            .map(|c| c.as_ref())
+            .collect::<HashSet<_>>()
+            .into_iter()
     }
 }
 
 impl<'a, A> FromIterator<A> for UnionSet<'a>
-where A: Into<Cow<'a, Set<'a>>> {
+where
+    A: Into<Cow<'a, Set<'a>>>,
+{
     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
         Self(iter.into_iter().map(|i| i.into()).collect())
     }
@@ -55,7 +65,8 @@ mod test {
         ])));
 
         let mut output = String::new();
-        set.fmt_oql_named(&mut output, &mut Namer::new(&set)).unwrap();
+        set.fmt_oql_named(&mut output, &mut Namer::new(&set))
+            .unwrap();
         assert_eq!(output, "(.a;.b;)");
     }
 }

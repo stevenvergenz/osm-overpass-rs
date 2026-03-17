@@ -1,6 +1,5 @@
 # overpass-lib
 
-
 Easily create and execute [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API)
 queries of [OpenStreetMap](https://wiki.openstreetmap.org/wiki/About_OpenStreetMap). Supports
 both declarative and builder syntax for generating OverpassQL strings, a [reqwest]-based

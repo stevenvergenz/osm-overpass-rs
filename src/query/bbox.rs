@@ -1,5 +1,5 @@
-use std::fmt::Write;
 use crate::{OverpassQL, OverpassQLError};
+use std::fmt::Write;
 
 /// A geographic bounding box defined by two latitudes and two longitudes. Used to distinguish
 /// points inside and outside the box.
@@ -17,13 +17,23 @@ pub struct Bbox {
 
 impl Bbox {
     pub fn new(south: f64, west: f64, north: f64, east: f64) -> Self {
-        Self { south, west, north, east }
+        Self {
+            south,
+            west,
+            north,
+            east,
+        }
     }
 }
 
 impl OverpassQL for Bbox {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
-        let Self { south, west, north, east } = self;
+        let Self {
+            south,
+            west,
+            north,
+            east,
+        } = self;
         write!(f, "{south},{west},{north},{east}")?;
         Ok(())
     }
