@@ -21,5 +21,5 @@ pub(crate) trait Builder<'a>:
 {
 }
 
-/// Provides methods to build all the various types of OverpassQL [Set]s.
+#[doc = include_str!("../doc/setbuilder.md")]
 pub struct SetBuilder;

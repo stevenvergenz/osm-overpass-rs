@@ -1,12 +1,13 @@
-use crate::{Element, OverpassQLError, Query};
-use serde::Deserialize;
-use std::{
-    collections::HashMap,
-    fmt::{Display, Formatter, Result as FResult},
-};
+use crate::{OverpassQLError, Query};
+use std::fmt::{Display, Formatter, Result as FResult};
 
 mod server;
 pub use server::*;
+
+mod count;
+
+mod result;
+pub use result::*;
 
 /// An error returned when a request to evaluate a [Query] fails.
 #[derive(Debug)]
@@ -31,17 +32,6 @@ impl Display for OverpassError {
     }
 }
 impl std::error::Error for OverpassError {}
-
-/// The data returned from an [Overpass] [Query] evaluation.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct OverpassResult {
-    /// The [Element]s in the query set.
-    pub elements: Vec<Element>,
-
-    /// Miscellaneous information provided by the API server, such as the API version and a timestamp.
-    #[serde(flatten)]
-    pub other_fields: HashMap<String, serde_json::Value>,
-}
 
 /// Can retrieve [Element] data from OpenStreetMap that matches the provided [Query] set.
 pub trait Overpass {

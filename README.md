@@ -79,7 +79,7 @@ assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle")
     * ✅ date
     * ✅ diff
     * ❌ adiff
-    * ❌ out count
+    * ✅ out count
     * ✅ out verbosity
     * ❌ out modificators
     * ❌ out bbox
@@ -129,4 +129,4 @@ Issues and pull requests welcome through
 License: MIT
 
 [Set]: https://docs.rs/overpass-lib/latest/overpass_lib/enum.Set.html
-
+[Query::search_bbox]: https://docs.rs/overpass-lib/latest/overpass_lib/struct.Query.html#structfield.search_bbox

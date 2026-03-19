@@ -12,7 +12,9 @@ use std::{
 /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
 #[derive(Debug, Clone, Copy, Default)]
 pub enum QueryVerbosity {
-    //Count,
+    /// Include no elements at all, only the number of elements of each type.
+    Count,
+
     /// Include the element type, ID, coordinates/members, and tags.
     #[default]
     Body,
@@ -31,7 +33,7 @@ pub enum QueryVerbosity {
 impl OverpassQL for QueryVerbosity {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
-            //Self::Count => write!(f, "out count;"),
+            Self::Count => write!(f, "out count;"),
             Self::Body => write!(f, "out;"),
             Self::Ids => write!(f, "out ids;"),
             Self::Tags => write!(f, "out tags;"),
