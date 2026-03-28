@@ -21,10 +21,11 @@ Once your set is specified, you:
 
 ## Examples
 
+The easiest way to build a query is with the builder syntax:
+
 ```rust
 # use std::collections::HashSet;
 # use overpass_lib::*;
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
 // Let's find all the landmarks in downtown Seattle in a standard OverpassQL string.
 let oql = [
     "[bbox:47.553,-122.461,47.667,-122.201][out:json];",
@@ -32,7 +33,29 @@ let oql = [
     "out;",
 ].join("");
 
-// Using the declarative syntax, it looks like this:
+let builder_query: Query = SetBuilder::nodes_or_ways()
+    .with_tag_value("seamark:type", "landmark")
+    .to_query()
+    .search_bbox(Bbox {
+        north: 47.667,
+        south: 47.553,
+        east: -122.201,
+        west: -122.461,
+    })
+    .into();
+assert_eq!(&oql, &builder_query.to_oql());
+```
+
+If you prefer the declarative version instead, you're free to use it:
+
+```rust
+# use std::collections::HashSet;
+# use overpass_lib::*;
+# let oql = [
+#     "[bbox:47.553,-122.461,47.667,-122.201][out:json];",
+#     r#"nw["seamark:type"="landmark"];"#,
+#     "out;",
+# ].join("");
 let dec_query = Query {
     set: FilterSet {
         filter_type: FilterType::NodeOrWay,
@@ -48,28 +71,26 @@ let dec_query = Query {
     ..Default::default()
 };
 assert_eq!(&oql, &dec_query.to_oql());
+```
 
-// Using the builder API it looks like this:
-let builder_query: Query = SetBuilder::nodes_or_ways()
-    .with_tag_value("seamark:type", "landmark")
-    .to_query()
-    .search_bbox(Bbox {
-        north: 47.667,
-        south: 47.553,
-        east: -122.201,
-        west: -122.461,
-    })
-    .into();
-assert_eq!(&oql, &builder_query.to_oql());
+Evaluate the query via the default Overpass API server:
 
-// Evaluate the query via the default Overpass API server
-let res = OverpassServer::default().evaluate(&dec_query).await.unwrap();
+```rust
+# use std::collections::HashSet;
+# use overpass_lib::*;
+# let query: Query = SetBuilder::nodes_or_ways()
+#    .with_tag_value("seamark:type", "landmark")
+#    .to_query()
+#    .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
+#    .into();
+# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+
+let res = OverpassServer::default().evaluate(&query).await.unwrap();
 
 // One of those landmarks should be the Space Needle.
 assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle"))));
 # });
 ```
-
 ## Language Support
 
 * Settings

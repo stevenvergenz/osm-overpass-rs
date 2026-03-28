@@ -10,9 +10,6 @@ pub use filter::*;
 mod tag;
 pub use tag::*;
 
-mod bbox;
-pub use bbox::*;
-
 mod overpassql;
 pub use overpassql::*;
 

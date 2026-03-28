@@ -19,7 +19,10 @@ impl Default for OverpassServer {
     fn default() -> Self {
         Self {
             client: Cow::Borrowed(&CLIENT),
+            #[cfg(not(test))]
             url: String::from("https://overpass-api.de/api/interpreter"),
+            #[cfg(test)]
+            url: String::from("http://localhost:8080/api/interpreter"),
         }
     }
 }
@@ -44,6 +47,8 @@ impl Overpass for OverpassServer {
             .client
             .execute(req)
             .await
+            .map_err(|e| OverpassError::Request(e))?
+            .error_for_status()
             .map_err(|e| OverpassError::Request(e))?;
 
         match res.bytes().await {

@@ -1,10 +1,12 @@
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor};
 use std::collections::HashMap;
 
+use crate::{Bbox, Point};
+
 /// The basic component of OpenStreetMap's data model. Comes in three variants: [Node], [Way], and [Relation].
 ///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Elements)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase", tag = "type")]
 pub enum Element {
     Node(Node),
@@ -12,8 +14,17 @@ pub enum Element {
     Relation(Relation),
 }
 
+/// Data common to all variants of [Element]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
+pub struct ElementCommon {
+    pub id: i64,
+    pub tags: HashMap<String, String>,
+    pub bounds: Option<Bbox>,
+    pub geometry: Option<Vec<Point>>,
+}
+
 /// The identifier of an [Element], independent of the specific variant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase", tag = "type", content = "ref")]
 pub enum ElementId {
     Node(i64),
@@ -25,18 +36,18 @@ impl Element {
     /// The [ElementId] of this element.
     pub fn id(&self) -> ElementId {
         match self {
-            Self::Node(n) => ElementId::Node(n.id),
-            Self::Way(w) => ElementId::Way(w.id),
-            Self::Relation(r) => ElementId::Relation(r.id),
+            Self::Node(n) => ElementId::Node(n.common.id),
+            Self::Way(w) => ElementId::Way(w.common.id),
+            Self::Relation(r) => ElementId::Relation(r.common.id),
         }
     }
 
     /// The value of this element's tag with the given name, if one exists.
     pub fn tag(&self, name: &str) -> Option<&str> {
         let tags = match self {
-            Self::Node(n) => &n.tags,
-            Self::Way(w) => &w.tags,
-            Self::Relation(r) => &r.tags,
+            Self::Node(n) => &n.common.tags,
+            Self::Way(w) => &w.common.tags,
+            Self::Relation(r) => &r.common.tags,
         };
         tags.get(name).map(|s| s.as_str())
     }
@@ -44,9 +55,9 @@ impl Element {
     /// An iterator of tag values on this element, composed of key/value tuples.
     pub fn tags(&self) -> impl ExactSizeIterator<Item = (&str, &str)> {
         let tags = match self {
-            Self::Node(n) => &n.tags,
-            Self::Way(w) => &w.tags,
-            Self::Relation(r) => &r.tags,
+            Self::Node(n) => &n.common.tags,
+            Self::Way(w) => &w.common.tags,
+            Self::Relation(r) => &r.common.tags,
         };
         tags.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
@@ -57,10 +68,10 @@ impl Element {
 /// [wiki](https://wiki.openstreetmap.org/wiki/Node)
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Node {
-    pub id: i64,
-    pub lat: f64,
-    pub lon: f64,
-    pub tags: HashMap<String, String>,
+    #[serde(flatten)]
+    pub common: ElementCommon,
+    #[serde(flatten)]
+    pub point: Point,
 }
 
 /// A way is one of the fundamental elements of the map.
@@ -68,26 +79,28 @@ pub struct Node {
 /// [wiki](https://wiki.openstreetmap.org/wiki/Way)
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Way {
-    pub id: i64,
-    pub tags: HashMap<String, String>,
+    #[serde(flatten)]
+    pub common: ElementCommon,
     pub nodes: Vec<i64>,
 }
 
 /// Relations are structured collections of objects - nodes, ways, and other relations.
 ///
 /// [wiki](https://wiki.openstreetmap.org/wiki/Relation)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Relation {
-    pub id: i64,
-    pub tags: HashMap<String, String>,
+    #[serde(flatten)]
+    pub common: ElementCommon,
     pub members: Vec<RelationMember>,
 }
 
 /// A reference to another [Node], [Way], or [Relation] from the owning relation, with an optional role.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct RelationMember {
     #[serde(flatten)]
     pub id: ElementId,
+
+    /// The role of this element in a relation, if any.
     #[serde(deserialize_with = "skip_empty")]
     pub role: Option<String>,
 }

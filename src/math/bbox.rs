@@ -1,17 +1,25 @@
 use crate::{OverpassQL, OverpassQLError};
 use std::fmt::Write;
+use serde::{Deserialize, Serialize};
 
 /// A geographic bounding box defined by two latitudes and two longitudes. Used to distinguish
 /// points inside and outside the box.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct Bbox {
     /// The latitude of the southern edge of the bounding box.
+    #[serde(alias = "minlat")]
     pub south: f64,
+
     /// The longitude of the western edge of the bounding box.
+    #[serde(alias = "minlon")]
     pub west: f64,
+
     /// The latitude of the northern edge of the bounding box.
+    #[serde(alias = "maxlat")]
     pub north: f64,
+
     /// The longitude of the eastern edge of the bounding box.
+    #[serde(alias = "maxlon")]
     pub east: f64,
 }
 

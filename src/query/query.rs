@@ -1,5 +1,3 @@
-#[cfg(doc)]
-use crate::Element;
 use crate::{Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, Set};
 use chrono::{DateTime, Utc};
 use std::{

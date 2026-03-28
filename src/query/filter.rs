@@ -2,8 +2,6 @@ use crate::{
     Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, RecurseFilter,
     Set, TagFilter,
 };
-#[cfg(doc)]
-use crate::{Node, Relation, Way};
 use std::{
     borrow::Cow,
     collections::{HashSet, hash_set::IntoIter},
@@ -140,5 +138,28 @@ impl<'a> FilterSet<'a> {
             .chain(self.recurse_filters.iter().map(|r| r.input()))
             .collect::<HashSet<_>>()
             .into_iter()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{Overpass, OverpassServer, Query};
+
+    #[tokio::test]
+    #[ignore]
+    async fn id_filter() {
+        let q = Query {
+            set: FilterSet {
+                filter_type: FilterType::Node,
+                id_filters: HashSet::from([1001]),
+                ..Default::default()
+            }.into(),
+            ..Default::default()
+        };
+        let res = OverpassServer::default().evaluate(&q).await;
+        if let Err(e) = res {
+            panic!("{e}");
+        }
     }
 }
