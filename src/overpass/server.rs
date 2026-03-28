@@ -68,7 +68,6 @@ mod test {
     use super::*;
 
     #[tokio::test]
-    #[ignore]
     async fn server() {
         let q = OverpassServer::default()
             .evaluate(&Query::from(Set::Filter(FilterSet {

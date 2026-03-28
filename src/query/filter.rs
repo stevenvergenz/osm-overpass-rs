@@ -147,7 +147,6 @@ mod test {
     use crate::{Overpass, OverpassServer, Query};
 
     #[tokio::test]
-    #[ignore]
     async fn id_filter() {
         let q = Query {
             set: FilterSet {

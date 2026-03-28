@@ -75,7 +75,6 @@ mod test {
     use super::*;
 
     #[tokio::test]
-    #[ignore]
     async fn count() {
         let r = OverpassServer::default()
             .evaluate(
