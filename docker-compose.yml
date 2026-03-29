@@ -5,7 +5,7 @@ services:
     volumes:
       - "./test_db:/db"
     ports:
-      - "8080:80"
+      - "8081:80"
     environment:
       OVERPASS_MODE: init
       OVERPASS_PLANET_URL: "https://download.geofabrik.de/north-america/us/washington-latest.osm.pbf"

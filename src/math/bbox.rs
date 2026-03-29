@@ -1,4 +1,4 @@
-use crate::{OverpassQL, OverpassQLError};
+use crate::{OverpassQL, OverpassQLError, Point};
 use std::fmt::Write;
 use serde::{Deserialize, Serialize};
 
@@ -44,6 +44,17 @@ impl OverpassQL for Bbox {
         } = self;
         write!(f, "{south},{west},{north},{east}")?;
         Ok(())
+    }
+}
+
+impl From<Point> for Bbox {
+    fn from(value: Point) -> Self {
+        Self {
+            south: value.lat,
+            north: value.lat,
+            east: value.lon,
+            west: value.lon,
+        }
     }
 }
 

@@ -1,8 +1,7 @@
 #[cfg(doc)]
 use crate::SetBuilder;
 use crate::{
-    Bbox, FilterSet, FilterSetBuilder, Query, QueryVerbosity, Set, UnionSet,
-    UnionSetBuilder,
+    Bbox, FilterSet, FilterSetBuilder, Query, QueryGeometry, QueryVerbosity, Set, UnionSet, UnionSetBuilder
 };
 use chrono::{DateTime, Utc};
 
@@ -77,6 +76,11 @@ impl<'a> QueryBuilder<'a> {
     /// Set [Query::verbosity].
     pub fn verbosity(mut self, verbosity: QueryVerbosity) -> Self {
         self.0.verbosity = verbosity;
+        self
+    }
+
+    pub fn geometry(mut self, geometry: QueryGeometry) -> Self {
+        self.0.geometry = geometry;
         self
     }
 }

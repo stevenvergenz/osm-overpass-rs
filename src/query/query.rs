@@ -31,12 +31,33 @@ pub enum QueryVerbosity {
 impl OverpassQL for QueryVerbosity {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
-            Self::Count => write!(f, "out count;"),
-            Self::Body => write!(f, "out;"),
-            Self::Ids => write!(f, "out ids;"),
-            Self::Tags => write!(f, "out tags;"),
-            Self::Skeleton => write!(f, "out skel;"),
+            Self::Body => Ok(()),
+            Self::Count => write!(f, "count"),
+            Self::Ids => write!(f, "ids"),
+            Self::Tags => write!(f, "tags"),
+            Self::Skeleton => write!(f, "skel"),
             //Self::Meta => write!(f, "out meta;"),
+        }?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub enum QueryGeometry {
+    #[default]
+    None,
+    Center,
+    Bbox,
+    Geometry,
+}
+
+impl OverpassQL for QueryGeometry {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
+        match self {
+            Self::None => Ok(()),
+            Self::Center => write!(f, "center"),
+            Self::Bbox => write!(f, "bb"),
+            Self::Geometry => write!(f, "geom"),
         }?;
         Ok(())
     }
@@ -68,6 +89,8 @@ pub struct Query<'a> {
     /// Adjust the amount of detail included in returned [Element](crate::Element)s.
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
     pub verbosity: QueryVerbosity,
+
+    pub geometry: QueryGeometry,
 
     /// The [Set] of [Element](crate::Element)s to be returned when this query is [evaluate](crate::Overpass::evaluate)d.
     pub set: Set<'a>,
@@ -188,7 +211,27 @@ impl<'a> OverpassQL for Query<'a> {
             write!(f, ";")?;
         }
 
-        self.verbosity.fmt_oql(f)
+        match (self.verbosity, self.geometry) {
+            (QueryVerbosity::Body, QueryGeometry::None) => write!(f, "out;")?,
+            (QueryVerbosity::Body, geom) => {
+                write!(f, "out ")?;
+                geom.fmt_oql(f)?;
+                write!(f, ";")?;
+            },
+            (verbosity, QueryGeometry::None) => {
+                write!(f, "out ")?;
+                verbosity.fmt_oql(f)?;
+                write!(f, ";")?;
+            },
+            (verbosity, geom) => {
+                write!(f, "out ")?;
+                verbosity.fmt_oql(f)?;
+                write!(f, " ")?;
+                geom.fmt_oql(f)?;
+                write!(f, ";")?;
+            }
+        };
+        Ok(())
     }
 }
 

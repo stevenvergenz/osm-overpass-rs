@@ -22,7 +22,7 @@ impl Default for OverpassServer {
             #[cfg(not(test))]
             url: String::from("https://overpass-api.de/api/interpreter"),
             #[cfg(test)]
-            url: String::from("http://localhost:8080/api/interpreter"),
+            url: String::from("http://localhost:8081/api/interpreter"),
         }
     }
 }
