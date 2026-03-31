@@ -88,7 +88,14 @@ Evaluate the query via the default Overpass API server:
 let res = OverpassServer::default().evaluate(&query).await.unwrap();
 
 // One of those landmarks should be the Space Needle.
-assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle"))));
+assert!(
+    res.elements.iter().any(|e| {
+        matches!(
+            e.tags().get("name").map(|s| s.as_str()),
+            Some("Space Needle"),
+        )
+    }),
+);
 # });
 ```
 ## Language Support
@@ -102,7 +109,7 @@ assert!(res.elements.iter().any(|e| matches!(e.tag("name"), Some("Space Needle")
     * ❌ adiff
     * ✅ out count
     * ✅ out verbosity
-    * ❌ out modificators
+    * ✅ out modificators
     * ❌ out bbox
     * ❌ out sort order
     * ❌ out limit

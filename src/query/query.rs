@@ -217,12 +217,12 @@ impl<'a> OverpassQL for Query<'a> {
                 write!(f, "out ")?;
                 geom.fmt_oql(f)?;
                 write!(f, ";")?;
-            },
+            }
             (verbosity, QueryGeometry::None) => {
                 write!(f, "out ")?;
                 verbosity.fmt_oql(f)?;
                 write!(f, ";")?;
-            },
+            }
             (verbosity, geom) => {
                 write!(f, "out ")?;
                 verbosity.fmt_oql(f)?;

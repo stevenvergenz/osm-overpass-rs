@@ -54,7 +54,9 @@ impl Overpass for OverpassServer {
         match res.bytes().await {
             Err(e) => Err(OverpassError::Request(e)),
             Ok(b) => {
-                serde_json::from_slice(&b).map_err(|e| OverpassError::Parse(e))
+                let res = String::from_utf8_lossy(&b).to_string();
+                serde_json::from_slice(&b)
+                    .map_err(|e| OverpassError::Parse(e, res))
             }
         }
     }
@@ -78,7 +80,7 @@ mod test {
             .await;
 
         let ids = q
-            .unwrap()
+            .expect("Evaluation failure")
             .elements
             .into_iter()
             .map(|e| e.id())

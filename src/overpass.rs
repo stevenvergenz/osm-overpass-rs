@@ -17,7 +17,7 @@ pub enum OverpassError {
     /// There was an error communicating with the Overpass server.
     Request(reqwest::Error),
     /// There was an error parsing the response from the Overpass server.
-    Parse(serde_json::Error),
+    Parse(serde_json::Error, String),
     /// An unknown error occurred.
     Other(String),
 }
@@ -26,7 +26,9 @@ impl Display for OverpassError {
         match self {
             Self::Query(e) => write!(f, "{e}"),
             Self::Request(e) => write!(f, "{e}"),
-            Self::Parse(e) => write!(f, "Deserialization error: {e}"),
+            Self::Parse(e, res) => {
+                write!(f, "Deserialization error: {e}\nBody: {res}")
+            }
             Self::Other(e) => write!(f, "Error from API provider: {e}"),
         }
     }

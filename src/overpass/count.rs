@@ -85,7 +85,7 @@ mod test {
                     .as_ref(),
             )
             .await
-            .expect("A successful server result");
+            .expect("Query evaluation error");
         assert!(matches!(
             r.counts,
             Some(ResultCount {

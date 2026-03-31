@@ -1,6 +1,6 @@
 use crate::{OverpassQL, OverpassQLError, Point};
-use std::fmt::Write;
 use serde::{Deserialize, Serialize};
+use std::fmt::Write;
 
 /// A geographic bounding box defined by two latitudes and two longitudes. Used to distinguish
 /// points inside and outside the box.

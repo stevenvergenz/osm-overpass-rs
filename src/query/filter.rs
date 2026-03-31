@@ -153,7 +153,8 @@ mod test {
                 filter_type: FilterType::Node,
                 id_filters: HashSet::from([1001]),
                 ..Default::default()
-            }.into(),
+            }
+            .into(),
             ..Default::default()
         };
         let res = OverpassServer::default().evaluate(&q).await;

@@ -1,7 +1,8 @@
 #[cfg(doc)]
 use crate::SetBuilder;
 use crate::{
-    Bbox, FilterSet, FilterSetBuilder, Query, QueryGeometry, QueryVerbosity, Set, UnionSet, UnionSetBuilder
+    Bbox, FilterSet, FilterSetBuilder, Query, QueryGeometry, QueryVerbosity,
+    Set, UnionSet, UnionSetBuilder,
 };
 use chrono::{DateTime, Utc};
 
