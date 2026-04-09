@@ -9,8 +9,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase", tag = "type")]
 pub enum Element {
+    /// This element is a [Node] type.
     Node(Node),
+
+    /// This element is a [Way] type.
     Way(Way),
+
+    /// This element is a [Relation] type.
     Relation(Relation),
 }
 
@@ -18,8 +23,13 @@ pub enum Element {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase", tag = "type", content = "ref")]
 pub enum ElementId {
+    /// This is the id for a [Node] element.
     Node(i64),
+
+    /// This is the id for a [Way] element.
     Way(i64),
+
+    /// This is the id for a [Relation] element.
     Relation(i64),
 }
 
