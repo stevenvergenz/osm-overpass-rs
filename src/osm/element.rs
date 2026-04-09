@@ -87,14 +87,19 @@ mod test {
     #[tokio::test]
     async fn geom() -> Result<(), Box<dyn std::error::Error>> {
         let q: Query = SetBuilder::union([
-            SetBuilder::nodes().with_id(3359850618) ,
+            SetBuilder::nodes().with_id(3359850618),
             SetBuilder::ways().with_id(12903132),
             SetBuilder::relations().with_id(19745997),
         ])
         .to_output()
         .geometry(QueryGeometry::Geometry)
         .to_query()
-        .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
+        .search_bbox(Bbox {
+            north: 47.667,
+            south: 47.553,
+            east: -122.201,
+            west: -122.461,
+        })
         .into();
         println!("{}", q.to_oql());
         let res = OverpassServer::default().evaluate(&q).await?;

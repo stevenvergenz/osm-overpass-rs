@@ -69,7 +69,8 @@ impl TryFrom<PreResult<'_>> for OverpassResult {
 #[cfg(test)]
 mod test {
     use crate::{
-        Overpass, OverpassServer, QueryVerbosity, SetBuilder, SetBuilderCommon, Bbox,
+        Bbox, Overpass, OverpassServer, QueryVerbosity, SetBuilder,
+        SetBuilderCommon,
     };
 
     use super::*;
@@ -83,7 +84,12 @@ mod test {
                     .to_output()
                     .verbosity(QueryVerbosity::Count)
                     .to_query()
-                    .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
+                    .search_bbox(Bbox {
+                        north: 47.667,
+                        south: 47.553,
+                        east: -122.201,
+                        west: -122.461,
+                    })
                     .as_ref(),
             )
             .await

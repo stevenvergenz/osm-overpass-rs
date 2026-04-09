@@ -1,6 +1,6 @@
 use crate::{
-    OutputBuilder, Query, QueryBuilder, QueryOutput, Set,
-    SetBuilder, SetBuilderCommon, UnionSet,
+    OutputBuilder, Query, QueryBuilder, QueryOutput, Set, SetBuilder,
+    SetBuilderCommon, UnionSet,
 };
 use std::borrow::Cow;
 

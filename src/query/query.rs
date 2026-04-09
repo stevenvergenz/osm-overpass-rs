@@ -1,6 +1,5 @@
 use crate::{
-    Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed,
-    QueryOutput, Set,
+    Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, QueryOutput, Set,
 };
 use chrono::{DateTime, Utc};
 use std::{

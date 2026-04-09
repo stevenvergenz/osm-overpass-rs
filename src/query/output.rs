@@ -1,6 +1,4 @@
-use crate::{
-    Namer, OverpassQL, OverpassQLError, OverpassQLNamed, Set,
-};
+use crate::{Namer, OverpassQL, OverpassQLError, OverpassQLNamed, Set};
 use std::{borrow::Cow, fmt::Write};
 
 /// The amount of detail to be included in [Query]-matched [Element]s.

@@ -132,15 +132,14 @@ impl<'a> FilterSet<'a> {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        Overpass, OverpassServer, SetBuilder,
-        SetBuilderCommon,
-    };
+    use crate::{Overpass, OverpassServer, SetBuilder, SetBuilderCommon};
 
     #[tokio::test]
     async fn id_filter() {
         let res = OverpassServer::default()
-            .evaluate(SetBuilder::nodes().with_id(3359850618).to_query().as_ref())
+            .evaluate(
+                SetBuilder::nodes().with_id(3359850618).to_query().as_ref(),
+            )
             .await;
         if let Err(e) = res {
             panic!("{e}");

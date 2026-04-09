@@ -64,10 +64,7 @@ impl Overpass for OverpassServer {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        ElementId, SetBuilder, Bbox,
-        SetBuilderCommon,
-    };
+    use crate::{Bbox, ElementId, SetBuilder, SetBuilderCommon};
     use std::collections::HashSet;
 
     use super::*;
@@ -76,10 +73,16 @@ mod test {
     async fn server() {
         let q = OverpassServer::default()
             .evaluate(
-                SetBuilder::nodes().with_id(3359850618)
-                .to_query()
-                .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
-                .as_ref(),
+                SetBuilder::nodes()
+                    .with_id(3359850618)
+                    .to_query()
+                    .search_bbox(Bbox {
+                        north: 47.667,
+                        south: 47.553,
+                        east: -122.201,
+                        west: -122.461,
+                    })
+                    .as_ref(),
             )
             .await;
 
