@@ -64,7 +64,10 @@ impl Overpass for OverpassServer {
 
 #[cfg(test)]
 mod test {
-    use crate::{ElementId, FilterSet, FilterType, Set};
+    use crate::{
+        ElementId, SetBuilder, Bbox,
+        SetBuilderCommon,
+    };
     use std::collections::HashSet;
 
     use super::*;
@@ -72,11 +75,12 @@ mod test {
     #[tokio::test]
     async fn server() {
         let q = OverpassServer::default()
-            .evaluate(&Query::from(Set::Filter(FilterSet {
-                filter_type: FilterType::Node,
-                id_filters: HashSet::from([3359850618]),
-                ..Default::default()
-            })))
+            .evaluate(
+                SetBuilder::nodes().with_id(3359850618)
+                .to_query()
+                .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
+                .as_ref(),
+            )
             .await;
 
         let ids = q
@@ -84,7 +88,7 @@ mod test {
             .elements
             .into_iter()
             .map(|e| e.id())
-            .collect::<HashSet<ElementId>>();
+            .collect::<HashSet<_>>();
         assert_eq!(ids, HashSet::from([ElementId::Node(3359850618)]));
     }
 }

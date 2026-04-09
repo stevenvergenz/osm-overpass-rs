@@ -46,15 +46,6 @@ impl OverpassQL for FilterType {
     }
 }
 
-impl<'a> Into<Set<'a>> for FilterType {
-    fn into(self) -> Set<'a> {
-        Set::Filter(FilterSet {
-            filter_type: self,
-            ..Default::default()
-        })
-    }
-}
-
 /// A subtype of [Set] that contains elements that satisfy the specified criteria.
 #[derive(Debug, Clone, Default)]
 pub struct FilterSet<'a> {
@@ -97,9 +88,7 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
         self.filter_type.fmt_oql(f)?;
 
         for input in &self.inputs {
-            if let Some(name) = namer.get_or_assign(input) {
-                write!(f, ".{name}")?;
-            }
+            write!(f, ".{}", namer.get_or_assign(input))?;
         }
 
         if self.id_filters.len() > 0 {
@@ -143,21 +132,16 @@ impl<'a> FilterSet<'a> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::{Overpass, OverpassServer, Query};
+    use crate::{
+        Overpass, OverpassServer, SetBuilder,
+        SetBuilderCommon,
+    };
 
     #[tokio::test]
     async fn id_filter() {
-        let q = Query {
-            set: FilterSet {
-                filter_type: FilterType::Node,
-                id_filters: HashSet::from([1001]),
-                ..Default::default()
-            }
-            .into(),
-            ..Default::default()
-        };
-        let res = OverpassServer::default().evaluate(&q).await;
+        let res = OverpassServer::default()
+            .evaluate(SetBuilder::nodes().with_id(3359850618).to_query().as_ref())
+            .await;
         if let Err(e) = res {
             panic!("{e}");
         }

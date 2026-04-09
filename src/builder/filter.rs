@@ -1,41 +1,21 @@
 use crate::{
-    Bbox, Builder, FilterSet, FilterType, RecurseFilter, SaniStr, Set,
-    SetBuilder, TagFilter,
+    Bbox, FilterSet, FilterType, OutputBuilder, Query, QueryBuilder,
+    QueryOutput, RecurseFilter, SaniStr, Set, SetBuilder, SetBuilderCommon,
+    TagFilter, UnionSet, UnionSetBuilder,
 };
 #[cfg(doc)]
 use crate::{Node, Relation, Way};
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashSet};
 
 /// A convenient builder API for [FilterSet].
+#[derive(Debug, Clone)]
 pub struct FilterSetBuilder<'a>(
     /// The set being configured.
     pub FilterSet<'a>,
 );
 
-impl<'a> Builder<'a> for FilterSetBuilder<'a> {}
-
-impl<'a> Into<Set<'a>> for FilterSetBuilder<'a> {
-    fn into(self) -> Set<'a> {
-        self.0.into()
-    }
-}
-
-impl<'a> Into<Cow<'a, Set<'a>>> for FilterSetBuilder<'a> {
-    fn into(self) -> Cow<'a, Set<'a>> {
-        Cow::Owned(self.into())
-    }
-}
-
-impl<'a> IntoIterator for FilterSetBuilder<'a> {
-    type Item = FilterSetBuilder<'a>;
-    type IntoIter = std::array::IntoIter<Self::Item, 1>;
-    fn into_iter(self) -> Self::IntoIter {
-        [self].into_iter()
-    }
-}
-
 /// Methods to create new [FilterSet]s.
-impl SetBuilder {
+impl SetBuilder<'_> {
     /// Start a new filter set containing [Node]s, i.e. [FilterType::Node].
     pub fn nodes<'a>() -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
@@ -434,6 +414,49 @@ impl<'a> FilterSetBuilder<'a> {
                 role: Some(SaniStr(role)),
             });
         self
+    }
+}
+
+impl<'a> SetBuilderCommon<'a> for FilterSetBuilder<'a> {
+    fn union_with(
+        self,
+        other: impl Into<Cow<'a, Set<'a>>>,
+    ) -> UnionSetBuilder<'a> {
+        UnionSetBuilder(UnionSet(HashSet::from([self.into(), other.into()])))
+    }
+
+    fn to_output(self) -> OutputBuilder<'a> {
+        OutputBuilder(QueryOutput {
+            set: Set::from(self.0).into(),
+            ..Default::default()
+        })
+    }
+
+    fn to_query(self) -> QueryBuilder<'a> {
+        QueryBuilder(Query {
+            outputs: vec![self.to_output().into()],
+            ..Default::default()
+        })
+    }
+}
+
+impl<'a> Into<Set<'a>> for FilterSetBuilder<'a> {
+    fn into(self) -> Set<'a> {
+        self.0.into()
+    }
+}
+
+impl<'a> Into<Cow<'a, Set<'a>>> for FilterSetBuilder<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
+        Cow::Owned(self.into())
+    }
+}
+
+impl<'a> IntoIterator for FilterSetBuilder<'a> {
+    type Item = FilterSetBuilder<'a>;
+    type IntoIter = std::array::IntoIter<Self::Item, 1>;
+    fn into_iter(self) -> Self::IntoIter {
+        [self].into_iter()
     }
 }
 

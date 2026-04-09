@@ -2,14 +2,14 @@ use crate::{Element, Node, OverpassResult, Relation, ResultCount, Way};
 use serde::Deserialize;
 use std::{collections::HashMap, num::ParseIntError};
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub(crate) struct PreResult<'a> {
     #[serde(borrow)]
     elements: Vec<PreElement<'a>>,
     #[serde(flatten)]
     pub other_fields: HashMap<String, serde_json::Value>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "type")]
 pub(crate) enum PreElement<'a> {
     Node(Node),
@@ -30,7 +30,7 @@ impl From<PreElement<'_>> for Element {
         }
     }
 }
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub(crate) struct PreCount<'a> {
     nodes: &'a str,
     ways: &'a str,
@@ -69,7 +69,7 @@ impl TryFrom<PreResult<'_>> for OverpassResult {
 #[cfg(test)]
 mod test {
     use crate::{
-        Overpass, OverpassServer, QueryVerbosity, SetBuilder, ToQuery,
+        Overpass, OverpassServer, QueryVerbosity, SetBuilder, SetBuilderCommon, Bbox,
     };
 
     use super::*;
@@ -80,13 +80,16 @@ mod test {
             .evaluate(
                 SetBuilder::ways()
                     .with_id(12903132)
-                    .to_query()
+                    .to_output()
                     .verbosity(QueryVerbosity::Count)
+                    .to_query()
+                    .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
                     .as_ref(),
             )
             .await
             .expect("Query evaluation error");
-        assert!(matches!(
+
+        assert_eq!(
             r.counts,
             Some(ResultCount {
                 nodes: 0,
@@ -94,6 +97,6 @@ mod test {
                 relations: 0,
                 total: 1
             })
-        ));
+        );
     }
 }

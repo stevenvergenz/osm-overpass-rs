@@ -27,18 +27,6 @@ impl Default for Set<'_> {
     }
 }
 
-impl<'a> From<FilterSet<'a>> for Set<'a> {
-    fn from(value: FilterSet<'a>) -> Self {
-        Self::Filter(value)
-    }
-}
-
-impl<'a> From<UnionSet<'a>> for Set<'a> {
-    fn from(value: UnionSet<'a>) -> Self {
-        Self::Union(value)
-    }
-}
-
 impl<'a> OverpassQLNamed<'a> for Set<'a> {
     fn fmt_oql_named<'b, 'c>(
         &'b self,
@@ -54,9 +42,7 @@ impl<'a> OverpassQLNamed<'a> for Set<'a> {
             Self::Raw(raw) => write!(f, "{raw}")?,
         };
 
-        if let Some(name) = namer.get_or_assign(self) {
-            write!(f, "->.{name}")?;
-        }
+        write!(f, "->.{}", namer.get_or_assign(self))?;
 
         Ok(())
     }
@@ -95,5 +81,17 @@ impl<'a> Into<Cow<'a, Set<'a>>> for Set<'a> {
 impl<'a> Into<Cow<'a, Set<'a>>> for &'a Set<'a> {
     fn into(self) -> Cow<'a, Set<'a>> {
         Cow::Borrowed(self)
+    }
+}
+
+impl<'a> From<FilterSet<'a>> for Set<'a> {
+    fn from(value: FilterSet<'a>) -> Self {
+        Self::Filter(value)
+    }
+}
+
+impl<'a> From<UnionSet<'a>> for Set<'a> {
+    fn from(value: UnionSet<'a>) -> Self {
+        Self::Union(value)
     }
 }

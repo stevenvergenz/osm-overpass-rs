@@ -14,7 +14,7 @@ pub enum Element {
     Relation(Relation),
 }
 
-/// The identifier of an [Element], independent of the specific variant.
+/// The identifier of an [Element]: the type and the numeric identifier.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase", tag = "type", content = "ref")]
 pub enum ElementId {
@@ -24,6 +24,7 @@ pub enum ElementId {
 }
 
 impl ElementId {
+    /// The numeric value of the id.
     pub fn value(&self) -> i64 {
         match self {
             Self::Node(id) => *id,
@@ -49,7 +50,7 @@ impl Element {
         matches!(self, Self::Relation(_))
     }
 
-    /// The [ElementId] of this element.
+    /// The unique identifier of this element.
     pub fn id(&self) -> ElementId {
         match self {
             Self::Node(n) => n.id,
@@ -58,7 +59,7 @@ impl Element {
         }
     }
 
-    /// An iterator of tag values on this element, composed of key/value tuples.
+    /// The set of tags on the element.
     pub fn tags(&self) -> &HashMap<String, String> {
         match self {
             Self::Node(n) => &n.tags,
@@ -70,9 +71,7 @@ impl Element {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        Overpass, OverpassServer, Query, QueryGeometry, SetBuilder, ToQuery,
-    };
+    use crate::*;
 
     use super::*;
 
@@ -88,14 +87,16 @@ mod test {
     #[tokio::test]
     async fn geom() -> Result<(), Box<dyn std::error::Error>> {
         let q: Query = SetBuilder::union([
-            SetBuilder::nodes().with_id(3359850618),
+            SetBuilder::nodes().with_id(3359850618) ,
             SetBuilder::ways().with_id(12903132),
             SetBuilder::relations().with_id(19745997),
         ])
-        .to_query()
+        .to_output()
         .geometry(QueryGeometry::Geometry)
+        .to_query()
+        .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
         .into();
-
+        println!("{}", q.to_oql());
         let res = OverpassServer::default().evaluate(&q).await?;
 
         let way = res

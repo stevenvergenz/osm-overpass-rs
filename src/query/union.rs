@@ -23,9 +23,7 @@ impl<'a> OverpassQLNamed<'a> for UnionSet<'a> {
     {
         write!(f, "(")?;
         for i in &self.0 {
-            if let Some(n) = namer.get_or_assign(i) {
-                write!(f, ".{n};")?;
-            }
+            write!(f, ".{};", namer.get_or_assign(i))?;
         }
         write!(f, ")")?;
         Ok(())
@@ -60,13 +58,13 @@ mod test {
     #[test]
     fn union() {
         let set = Set::Union(UnionSet(HashSet::from([
-            Cow::Owned(Set::Filter(FilterSet::default())),
-            Cow::Owned(Set::Filter(FilterSet::default())),
+            Cow::Owned(Set::from(FilterSet::default())),
+            Cow::Owned(Set::from(FilterSet::default())),
         ])));
 
         let mut output = String::new();
-        set.fmt_oql_named(&mut output, &mut Namer::new(&set))
+        set.fmt_oql_named(&mut output, &mut Namer::default())
             .unwrap();
-        assert_eq!(output, "(.a;.b;)");
+        assert_eq!(output, "(.a;.b;)->.c");
     }
 }

@@ -1,24 +1,12 @@
 #[cfg(doc)]
 use crate::SetBuilder;
-use crate::{
-    Bbox, FilterSet, FilterSetBuilder, Query, QueryGeometry, QueryVerbosity,
-    Set, UnionSet, UnionSetBuilder,
-};
+use crate::{Bbox, FilterSetBuilder, Query, QueryOutput, UnionSetBuilder};
 use chrono::{DateTime, Utc};
-
-/// Trait to convert [SetBuilder]s into [QueryBuilder]s unambiguously in addition to
-/// [`Into<QueryBuilder>`].
-pub trait ToQuery<'a>: Into<QueryBuilder<'a>> {
-    /// Convert this type into a [QueryBuilder].
-    fn to_query(self) -> QueryBuilder<'a> {
-        self.into()
-    }
-}
 
 /// A convenient builder API for [Query].
 pub struct QueryBuilder<'a>(
     /// The query being modified.
-    Query<'a>,
+    pub Query<'a>,
 );
 
 impl<'a> Into<Query<'a>> for QueryBuilder<'a> {
@@ -73,31 +61,28 @@ impl<'a> QueryBuilder<'a> {
         self.0.diff = Some((start.into(), Some(end.into())));
         self
     }
+}
 
-    /// Set [Query::verbosity].
-    pub fn verbosity(mut self, verbosity: QueryVerbosity) -> Self {
-        self.0.verbosity = verbosity;
-        self
-    }
-
-    pub fn geometry(mut self, geometry: QueryGeometry) -> Self {
-        self.0.geometry = geometry;
-        self
+impl<'a> From<FilterSetBuilder<'a>> for QueryBuilder<'a> {
+    fn from(value: FilterSetBuilder<'a>) -> Self {
+        Self(Query {
+            outputs: vec![QueryOutput {
+                set: value.into(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        })
     }
 }
 
-impl<'a> Into<QueryBuilder<'a>> for FilterSetBuilder<'a> {
-    fn into(self) -> QueryBuilder<'a> {
-        let set: FilterSet = self.0.into();
-        QueryBuilder(Query::from(Set::from(set)))
+impl<'a> From<UnionSetBuilder<'a>> for QueryBuilder<'a> {
+    fn from(value: UnionSetBuilder<'a>) -> Self {
+        Self(Query {
+            outputs: vec![QueryOutput {
+                set: value.into(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        })
     }
 }
-impl<'a> ToQuery<'a> for FilterSetBuilder<'a> {}
-
-impl<'a> Into<QueryBuilder<'a>> for UnionSetBuilder<'a> {
-    fn into(self) -> QueryBuilder<'a> {
-        let set: UnionSet = self.0.into();
-        QueryBuilder(Query::from(Set::from(set)))
-    }
-}
-impl<'a> ToQuery<'a> for UnionSetBuilder<'a> {}

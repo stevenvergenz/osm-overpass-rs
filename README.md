@@ -29,8 +29,8 @@ The easiest way to build a query is with the builder syntax:
 // Let's find all the landmarks in downtown Seattle in a standard OverpassQL string.
 let oql = [
     "[bbox:47.553,-122.461,47.667,-122.201][out:json];",
-    r#"nw["seamark:type"="landmark"];"#,
-    "out;",
+    r#"nw["seamark:type"="landmark"]->.a;"#,
+    ".a out;",
 ].join("");
 
 let builder_query: Query = SetBuilder::nodes_or_ways()
@@ -53,15 +53,20 @@ If you prefer the declarative version instead, you're free to use it:
 # use overpass_lib::*;
 # let oql = [
 #     "[bbox:47.553,-122.461,47.667,-122.201][out:json];",
-#     r#"nw["seamark:type"="landmark"];"#,
-#     "out;",
+#     r#"nw["seamark:type"="landmark"]->.a;"#,
+#     ".a out;",
 # ].join("");
 let dec_query = Query {
-    set: FilterSet {
-        filter_type: FilterType::NodeOrWay,
-        tag_filters: HashSet::from([TagFilter::equals("seamark:type", "landmark")]),
-        ..Default::default()
-    }.into(),
+    outputs: vec![
+        QueryOutput {
+            set: Set::from(FilterSet {
+                filter_type: FilterType::NodeOrWay,
+                tag_filters: HashSet::from([TagFilter::equals("seamark:type", "landmark")]),
+                ..Default::default()
+            }).into(),
+            ..Default::default()
+        },
+    ],
     search_bbox: Some(Bbox {
         north: 47.667,
         south: 47.553,

@@ -1,70 +1,15 @@
-use crate::{Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, Set};
+use crate::{
+    Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed,
+    QueryOutput, Set,
+};
 use chrono::{DateTime, Utc};
 use std::{
     collections::{HashMap, HashSet},
     fmt::Write,
 };
 
-/// The amount of detail to be included in [Query]-matched [Element]s.
-///
-/// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
-#[derive(Debug, Clone, Copy, Default)]
-pub enum QueryVerbosity {
-    /// Include no elements at all, only the number of elements of each type.
-    Count,
-
-    /// Include the element type, ID, coordinates/members, and tags.
-    #[default]
-    Body,
-
-    /// Include the element type and ID only.
-    Ids,
-
-    /// Include the element type, ID, and coordinates/members only.
-    Skeleton,
-
-    /// Include the element type, ID, and tags only.
-    Tags,
-    //Meta,
-}
-
-impl OverpassQL for QueryVerbosity {
-    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
-        match self {
-            Self::Body => Ok(()),
-            Self::Count => write!(f, "count"),
-            Self::Ids => write!(f, "ids"),
-            Self::Tags => write!(f, "tags"),
-            Self::Skeleton => write!(f, "skel"),
-            //Self::Meta => write!(f, "out meta;"),
-        }?;
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub enum QueryGeometry {
-    #[default]
-    None,
-    Center,
-    Bbox,
-    Geometry,
-}
-
-impl OverpassQL for QueryGeometry {
-    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
-        match self {
-            Self::None => Ok(()),
-            Self::Center => write!(f, "center"),
-            Self::Bbox => write!(f, "bb"),
-            Self::Geometry => write!(f, "geom"),
-        }?;
-        Ok(())
-    }
-}
-
 /// The root type of this API. It serializes into a complete Overpass QL query by calling [to_oql](OverpassQL::to_oql).
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Query<'a> {
     /// The length of time in seconds after which the server will abort the query.
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout%3A)
@@ -86,23 +31,7 @@ pub struct Query<'a> {
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Difference_between_two_dates_.28diff.29)
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
 
-    /// Adjust the amount of detail included in returned [Element](crate::Element)s.
-    /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
-    pub verbosity: QueryVerbosity,
-
-    pub geometry: QueryGeometry,
-
-    /// The [Set] of [Element](crate::Element)s to be returned when this query is [evaluate](crate::Overpass::evaluate)d.
-    pub set: Set<'a>,
-}
-
-impl<'a> From<Set<'a>> for Query<'a> {
-    fn from(value: Set<'a>) -> Self {
-        Self {
-            set: value,
-            ..Default::default()
-        }
-    }
+    pub outputs: Vec<QueryOutput<'a>>,
 }
 
 impl<'a> AsRef<Query<'a>> for Query<'a> {
@@ -111,52 +40,57 @@ impl<'a> AsRef<Query<'a>> for Query<'a> {
     }
 }
 
-/// Determine the order in which the sets within this query must be defined.
-fn resolve_ordering<'a, 'b>(
-    query_set: &'b Set<'a>,
-) -> Result<Vec<&'b Set<'a>>, OverpassQLError>
-where
-    'a: 'b,
-{
-    // for {k: [v]}, v must be defined before k
-    let mut refs = evaluate_refs(query_set, HashMap::new());
-
-    // for {k: [v]}, k must be defined before v
-    let mut back_refs = HashMap::new();
-    for (a, b) in refs.iter() {
-        for c in b {
-            back_refs.entry(*c).or_insert(HashSet::new()).insert(*a);
-        }
-    }
-
-    let mut output = vec![];
-
-    while refs.len() > 0 {
-        // find sets with no dependencies
-        let next_outputs = refs
-            .extract_if(|_, v| v.len() == 0)
-            .map(|(k, _)| k)
-            .collect::<Vec<_>>();
-
-        // fail if there aren't any
-        if next_outputs.len() == 0 {
-            return Err(OverpassQLError::CircularReference);
+impl<'a> Query<'a> {
+    /// Determine the order in which the sets within this query must be defined.
+    fn resolve_ordering<'b>(
+        &'b self,
+    ) -> Result<Vec<&'b Set<'a>>, OverpassQLError>
+    where
+        'a: 'b,
+    {
+        // for {k: [v]}, v must be defined before k
+        let mut refs = HashMap::new();
+        for set in self.outputs.iter().map(|o| &o.set) {
+            refs = evaluate_refs(&set, refs);
         }
 
-        for next in next_outputs {
-            // output them first
-            output.push(next);
+        // for {k: [v]}, k must be defined before v
+        let mut back_refs = HashMap::new();
+        for (a, b) in refs.iter() {
+            for c in b {
+                back_refs.entry(*c).or_insert(HashSet::new()).insert(*a);
+            }
+        }
 
-            // take them out of any reference list that contains them
-            if let Some(next_refs) = back_refs.remove(next) {
-                for referent in next_refs.iter() {
-                    refs.get_mut(referent).unwrap().remove(next);
+        let mut output = vec![];
+
+        while refs.len() > 0 {
+            // find sets with no dependencies
+            let next_outputs = refs
+                .extract_if(|_, v| v.len() == 0)
+                .map(|(k, _)| k)
+                .collect::<Vec<_>>();
+
+            // fail if there aren't any
+            if next_outputs.len() == 0 {
+                return Err(OverpassQLError::CircularReference);
+            }
+
+            for next in next_outputs {
+                // output them first
+                output.push(next);
+
+                // take them out of any reference list that contains them
+                if let Some(next_refs) = back_refs.remove(next) {
+                    for referent in next_refs.iter() {
+                        refs.get_mut(referent).unwrap().remove(next);
+                    }
                 }
             }
         }
-    }
 
-    Ok(output)
+        Ok(output)
+    }
 }
 
 /// Generate a lookup table for the query's set dependencies.
@@ -205,32 +139,16 @@ impl<'a> OverpassQL for Query<'a> {
         }
         write!(f, "[out:json];")?;
 
-        let mut namer = Namer::new(&self.set);
-        for set in resolve_ordering(&self.set)? {
+        let mut namer = Namer::default();
+        for set in self.resolve_ordering()? {
             set.fmt_oql_named(f, &mut namer)?;
             write!(f, ";")?;
         }
 
-        match (self.verbosity, self.geometry) {
-            (QueryVerbosity::Body, QueryGeometry::None) => write!(f, "out;")?,
-            (QueryVerbosity::Body, geom) => {
-                write!(f, "out ")?;
-                geom.fmt_oql(f)?;
-                write!(f, ";")?;
-            }
-            (verbosity, QueryGeometry::None) => {
-                write!(f, "out ")?;
-                verbosity.fmt_oql(f)?;
-                write!(f, ";")?;
-            }
-            (verbosity, geom) => {
-                write!(f, "out ")?;
-                verbosity.fmt_oql(f)?;
-                write!(f, " ")?;
-                geom.fmt_oql(f)?;
-                write!(f, ";")?;
-            }
-        };
+        for out in &self.outputs {
+            out.fmt_oql_named(f, &mut namer)?;
+        }
+
         Ok(())
     }
 }
@@ -256,13 +174,26 @@ mod test {
             inputs: HashSet::from([Cow::Borrowed(&q1)]),
             ..Default::default()
         });
+        let q = Query {
+            outputs: vec![
+                QueryOutput {
+                    set: Cow::Borrowed(&q1),
+                    ..Default::default()
+                },
+                QueryOutput {
+                    set: Cow::Borrowed(&q2),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        };
 
-        assert_eq!(super::resolve_ordering(&q2).unwrap(), vec![&q1, &q2]);
+        assert_eq!(q.resolve_ordering().unwrap(), vec![&q1, &q2]);
     }
 
     #[test]
     fn fmt_oql() {
-        let q1 = Set::Filter(FilterSet {
+        let q1 = Set::from(FilterSet {
             filter_type: FilterType::NodeOrWay,
             tag_filters: HashSet::from([TagFilter::equals(
                 "public_transport",
@@ -270,20 +201,26 @@ mod test {
             )]),
             ..Default::default()
         });
-        let q2 = Set::Filter(FilterSet {
+        let q2 = Set::from(FilterSet {
             filter_type: FilterType::Node,
             inputs: HashSet::from([Cow::Borrowed(&q1)]),
             ..Default::default()
         });
-        let q = Query::from(q2);
+        let q = Query {
+            outputs: vec![QueryOutput {
+                set: Cow::Borrowed(&q2),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
 
         assert_eq!(
             q.to_oql(),
             vec![
                 "[out:json];",
                 r#"nw["public_transport"="platform"]->.a;"#,
-                "node.a;",
-                "out;"
+                "node.a->.b;",
+                ".b out;",
             ]
             .join("")
         );

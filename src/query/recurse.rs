@@ -65,11 +65,13 @@ impl<'a> OverpassQLNamed<'a> for RecurseFilter<'a> {
             Self::ContainingWays { input, role } => ("bw", input, role),
             Self::ContainingRelations { input, role } => ("br", input, role),
         };
-        match (namer.get_or_assign(input), role) {
-            (Some(n), Some(r)) => write!(f, "({code}.{n}:{r}")?,
-            (Some(n), None) => write!(f, "({code}.{n})")?,
-            (None, Some(r)) => write!(f, "({code}:{r}")?,
-            (None, None) => write!(f, "({code})")?,
+        match role {
+            Some(r) => {
+                write!(f, "({code}.{n}:{r}", n = namer.get_or_assign(input))?;
+            }
+            None => {
+                write!(f, "({code}.{n})", n = namer.get_or_assign(input))?;
+            }
         };
         Ok(())
     }

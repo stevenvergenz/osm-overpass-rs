@@ -7,19 +7,65 @@ pub use union::*;
 mod query;
 pub use query::*;
 
-use crate::Set;
+mod output;
+pub use output::*;
+
+use crate::{Query, QueryOutput, Set};
+use enum_dispatch::enum_dispatch;
 use std::borrow::Cow;
 
-/// Internal trait to maintain consistency between builder types
-#[allow(unused)]
-pub(crate) trait Builder<'a>:
-    Into<Set<'a>>
-    + Into<Cow<'a, Set<'a>>>
-    + IntoIterator<Item = Self>
-    + UnionWith<'a>
-    + ToQuery<'a>
+/// Trait to maintain consistency between builder types
+#[enum_dispatch]
+pub trait SetBuilderCommon<'a>:
+    Into<Set<'a>> + Into<Cow<'a, Set<'a>>> + IntoIterator<Item = Self>
 {
+    fn union_with(
+        self,
+        other: impl Into<Cow<'a, Set<'a>>>,
+    ) -> UnionSetBuilder<'a>;
+
+    fn to_output(self) -> OutputBuilder<'a> {
+        OutputBuilder(QueryOutput {
+            set: self.into(),
+            ..Default::default()
+        })
+    }
+
+    fn to_query(self) -> QueryBuilder<'a> {
+        QueryBuilder(Query {
+            outputs: vec![self.to_output().into()],
+            ..Default::default()
+        })
+    }
 }
 
 #[doc = include_str!("../doc/setbuilder.md")]
-pub struct SetBuilder;
+#[derive(Debug, Clone)]
+#[enum_dispatch(SetBuilderCommon)]
+pub enum SetBuilder<'a> {
+    Filter(FilterSetBuilder<'a>),
+    Union(UnionSetBuilder<'a>),
+}
+
+impl<'a> Into<Set<'a>> for SetBuilder<'a> {
+    fn into(self) -> Set<'a> {
+        match self {
+            Self::Filter(f) => f.into(),
+            Self::Union(u) => u.into(),
+        }
+    }
+}
+
+impl<'a> Into<Cow<'a, Set<'a>>> for SetBuilder<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
+        Cow::Owned(self.into())
+    }
+}
+
+impl<'a> IntoIterator for SetBuilder<'a> {
+    type Item = SetBuilder<'a>;
+    type IntoIter = std::array::IntoIter<SetBuilder<'a>, 1>;
+    fn into_iter(self) -> Self::IntoIter {
+        [self].into_iter()
+    }
+}
