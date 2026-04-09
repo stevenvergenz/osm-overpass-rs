@@ -24,6 +24,7 @@ pub struct Bbox {
 }
 
 impl Bbox {
+    /// Create a new bounding box from the given coordinate bounds.
     pub fn new(south: f64, west: f64, north: f64, east: f64) -> Self {
         Self {
             south,

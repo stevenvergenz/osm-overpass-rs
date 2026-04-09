@@ -11,7 +11,10 @@ static CLIENT: LazyLock<Client> = LazyLock::new(|| Client::new());
 /// `OverpassServer::default()` directly.
 #[derive(Debug)]
 pub struct OverpassServer {
+    /// The HTTP client used to connect to the API server.
     pub client: Cow<'static, Client>,
+
+    /// The URL of the API server.
     pub url: String,
 }
 

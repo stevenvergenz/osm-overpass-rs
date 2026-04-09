@@ -30,6 +30,7 @@ pub struct Query<'a> {
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Difference_between_two_dates_.28diff.29)
     pub diff: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
 
+    /// The sets whose elements will be returned by this query, and their configurations.
     pub outputs: Vec<QueryOutput<'a>>,
 }
 

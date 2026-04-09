@@ -91,6 +91,7 @@ impl SetBuilder<'_> {
 }
 
 impl<'a> FilterSetBuilder<'a> {
+    /// Filter the contents of the provided set. If multiple sets are specified, only elements in all sets are considered.
     pub fn from<T>(mut self, sets: impl IntoIterator<Item = T>) -> Self
     where
         T: Into<Cow<'a, Set<'a>>>,

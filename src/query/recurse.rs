@@ -10,34 +10,46 @@ use crate::{Node, Relation, Way};
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum RecurseFilter<'a> {
     /// Select [Node]s that appear within a [Way] in the provided input [Set].
-    WithinWays { input: Cow<'a, Set<'a>> },
+    WithinWays {
+        /// The input set.
+        input: Cow<'a, Set<'a>>,
+    },
     /// Select [Node]s/[Way]s that are members of a [Relation] in the provided input [Set]. If a role is specified,
     /// the element must also have that role in said relations.
     WithinRelations {
+        /// The input set.
         input: Cow<'a, Set<'a>>,
+        /// If supplied, matching members must have this role.
         role: Option<SaniStr<'a>>,
     },
     /// Select [Way]s/[Relation]s that have a member [Node] in the provided input [Set]. If a role is specified,
     /// the node must also have that role in said relations.
     ContainingNodes {
+        /// The input set.
         input: Cow<'a, Set<'a>>,
+        /// If supplied, matching nodes must have this role in an input relation.
         role: Option<SaniStr<'a>>,
     },
     /// Select [Relation]s that have a member [Way] in the provided input [Set]. If a role is specified,
     /// the way must also have that role in said relations.
     ContainingWays {
+        /// The input set.
         input: Cow<'a, Set<'a>>,
+        /// If supplied, matching ways must have this role in an input relation.
         role: Option<SaniStr<'a>>,
     },
     /// Select [Relation]s that have a member [Relation] in the provided input [Set]. If a role is specified,
     /// the relation must also have that role in said relations.
     ContainingRelations {
+        /// The input set.
         input: Cow<'a, Set<'a>>,
+        /// If supplied, matching relations must have this role in an input relation.
         role: Option<SaniStr<'a>>,
     },
 }
 
 impl<'a> RecurseFilter<'a> {
+    /// The input set for this recurse filter.
     pub fn input(&self) -> &Set<'a> {
         match self {
             Self::WithinWays { input } => input,

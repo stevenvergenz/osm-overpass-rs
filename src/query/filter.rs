@@ -20,8 +20,11 @@ pub enum FilterType {
     /// Any element type
     #[default]
     Any,
+    /// Nodes or ways.
     NodeOrWay,
+    /// Nodes or relations.
     NodeOrRelation,
+    /// Ways or relations.
     WayOrRelation,
     // Derived,
     /// Ways or relations that the server determines represent a two-dimensional area and not just

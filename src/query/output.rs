@@ -38,12 +38,20 @@ impl OverpassQL for QueryVerbosity {
     }
 }
 
+/// The amount of geometry that should be computed for elements.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum QueryGeometry {
+    /// No geometry will be computed.
     #[default]
     None,
+
+    /// The bounding box centerpoint will be computed for ways and relations.
     Center,
+
+    /// The bounding box will be computed for ways and relations.
     Bbox,
+
+    /// The full coordinate set will be computed for ways and relation members.
     Geometry,
 }
 
@@ -59,12 +67,14 @@ impl OverpassQL for QueryGeometry {
     }
 }
 
+/// Configuration for how a set's elements should be represented.
 #[derive(Debug, Clone, Default)]
 pub struct QueryOutput<'a> {
     /// Adjust the amount of detail included in returned [Element](crate::Element)s.
     /// [wiki](https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Output_format_.28out%3A.29)
     pub verbosity: QueryVerbosity,
 
+    /// Adjust how much element geometry is returned from the server.
     pub geo: QueryGeometry,
 
     /// The [Set] of [Element](crate::Element)s to be returned when this query is [evaluate](crate::Overpass::evaluate)d.

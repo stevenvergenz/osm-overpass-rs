@@ -14,16 +14,18 @@ use crate::{Query, QueryOutput, Set};
 use enum_dispatch::enum_dispatch;
 use std::borrow::Cow;
 
-/// Trait to maintain consistency between builder types
+/// Trait to maintain consistency between builder types.
 #[enum_dispatch]
 pub trait SetBuilderCommon<'a>:
     Into<Set<'a>> + Into<Cow<'a, Set<'a>>> + IntoIterator<Item = Self>
 {
+    /// Create a new set with all elements from both this and another set.
     fn union_with(
         self,
         other: impl Into<Cow<'a, Set<'a>>>,
     ) -> UnionSetBuilder<'a>;
 
+    /// Start configuring output options for this set.
     fn to_output(self) -> OutputBuilder<'a> {
         OutputBuilder(QueryOutput {
             set: self.into(),
@@ -31,6 +33,7 @@ pub trait SetBuilderCommon<'a>:
         })
     }
 
+    /// Start configuring query options for this set.
     fn to_query(self) -> QueryBuilder<'a> {
         QueryBuilder(Query {
             outputs: vec![self.to_output().into()],
@@ -39,11 +42,14 @@ pub trait SetBuilderCommon<'a>:
     }
 }
 
+/// An enum of all the types of builders that produce sets.
 #[doc = include_str!("../doc/setbuilder.md")]
 #[derive(Debug, Clone)]
 #[enum_dispatch(SetBuilderCommon)]
 pub enum SetBuilder<'a> {
+    /// Builds a filter set.
     Filter(FilterSetBuilder<'a>),
+    /// Builds a union set.
     Union(UnionSetBuilder<'a>),
 }
 
