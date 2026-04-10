@@ -1,17 +1,21 @@
-use std::ops::{Add, Mul, Sub};
+use std::{fmt::Display, ops::{Add, Mul, Sub}};
 use serde::{Deserialize, Serialize};
 
 /// The radius of the earth in meters.
-const R: f64 = 6_371_200.0;
+pub const R: f64 = 6_371_200.0;
 
-const DEG2RAD: f64 = 3.141592658589 / 180.0;
+/// The conversion factor from degrees to radians.
+pub const DEG2RAD: f64 = 1f64.to_radians();
+
+/// The conversion factor from radians to degrees.
+pub const RAD2DEG: f64 = 1f64.to_degrees();
 
 /// A geographic coordinate.
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct Point {
-    /// The latitude of a coordinate in degrees north of the equator (-90 to 90).
+    /// The latitude of a coordinate in degrees north of the equator [-90 to 90].
     pub lat: f64,
-    /// The longitude of a coordinate in degrees east of the prime meridian (-180 to 180).
+    /// The longitude of a coordinate in degrees east of the prime meridian (-180 to 180].
     pub lon: f64,
 }
 
@@ -19,6 +23,32 @@ impl Point {
     /// Create a new point.
     pub fn new(lat: f64, lon: f64) -> Self {
         Self { lat, lon }
+    }
+
+    /// Guarantee that the coordinates fall within the valid range. Returns true if the point is modified.
+    pub fn normalize(&mut self) -> bool {
+        if (-90.0 ..= 90.0).contains(&self.lat) && (-180.0 ..= 180.0).contains(&self.lon) {
+            return false;
+        }
+
+        let rads = *self * DEG2RAD;
+        let x = rads.lat.cos() * rads.lon.sin();
+        let y = rads.lat.sin();
+        let z = rads.lat.cos() * rads.lon.cos();
+        let rads = Self {
+            lat: y.asin(),
+            lon: x.atan2(z),
+        };
+
+        *self = rads * RAD2DEG;
+        true
+    }
+
+    /// Returns a normalized copy of this point.
+    pub fn normalized(&self) -> Self {
+        let mut new = self.clone();
+        new.normalize();
+        new
     }
 
     /// Calculate the haversine distance between two points.
@@ -77,6 +107,22 @@ impl Mul for Point {
     }
 }
 
+impl Display for Point {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.lat >= 0. {
+            write!(f, "({:.3}° N, ", self.lat)?;
+        } else {
+            write!(f, "({:.3}° S, ", self.lat.abs())?;
+        }
+
+        if self.lon >= 0. {
+            write!(f, "{:.3}° E)", self.lon)
+        } else {
+            write!(f, "{:.3}° W)", self.lon.abs())
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -89,5 +135,15 @@ mod test {
 
         // distance should be approx 6,161.6km
         assert!((dist - 6_161_600.).abs() < 100.);
+    }
+
+    #[test]
+    fn normalize() {
+        let actual = Point::new(170., 330.).normalized();
+        let expected = Point::new(10., 150.);
+
+        if actual.distance_to(expected) >= 1. {
+            panic!("Expected {expected}, got {actual}");
+        }
     }
 }
