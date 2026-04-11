@@ -115,9 +115,9 @@ assert!(
     * ✅ out count
     * ✅ out verbosity
     * ✅ out modificators
-    * ❌ out bbox
-    * ❌ out sort order
-    * ❌ out limit
+    * ✅ out bbox
+    * ✅ out sort order
+    * ✅ out limit
 * Sets
     * ✅ union
     * ❌ difference

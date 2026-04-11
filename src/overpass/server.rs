@@ -22,9 +22,9 @@ impl Default for OverpassServer {
     fn default() -> Self {
         Self {
             client: Cow::Borrowed(&CLIENT),
-            #[cfg(not(any(test, doc)))]
+            #[cfg(not(any(test, doctest)))]
             url: String::from("https://overpass-api.de/api/interpreter"),
-            #[cfg(any(test, doc))]
+            #[cfg(any(test, doctest))]
             url: String::from("http://localhost:8081/api/interpreter"),
         }
     }

@@ -1,4 +1,4 @@
-use crate::{Query, QueryBuilder, QueryGeometry, QueryOutput, QueryVerbosity};
+use crate::{Bbox, Query, QueryBuilder, QueryGeometry, QueryOutput, QueryVerbosity, SortOrder};
 
 /// Convenience builder for creating a [QueryOutput].
 pub struct OutputBuilder<'a>(pub QueryOutput<'a>);
@@ -13,6 +13,24 @@ impl<'a> OutputBuilder<'a> {
     /// Set whether geometry should be computed for the output set's elements.
     pub fn geometry(mut self, geometry: QueryGeometry) -> Self {
         self.0.geo = geometry;
+        self
+    }
+
+    /// Restrict geometry output to these bounds.
+    pub fn bbox(mut self, bbox: Bbox) -> Self {
+        self.0.bbox = Some(bbox);
+        self
+    }
+
+    /// Change how returned elements are sorted.
+    pub fn sort_order(mut self, sort: SortOrder) -> Self {
+        self.0.sort = sort;
+        self
+    }
+
+    /// Restrict the output element count.
+    pub fn limit(mut self, limit: usize) -> Self {
+        self.0.limit = Some(limit);
         self
     }
 

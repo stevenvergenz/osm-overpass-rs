@@ -129,8 +129,16 @@ impl<'a> OverpassQLNamed<'a> for QueryOutput<'a> {
             self.geo.fmt_oql(f)?;
         }
         if let Some(bbox) = &self.bbox {
-            write!(f, " ")?;
+            write!(f, " (")?;
             bbox.fmt_oql(f)?;
+            write!(f, ")")?;
+        }
+        if self.sort != SortOrder::default() {
+            write!(f, " ")?;
+            self.sort.fmt_oql(f)?;
+        }
+        if let Some(limit) = &self.limit {
+            write!(f, " {limit}")?;
         }
         write!(f, ";")?;
         Ok(())
