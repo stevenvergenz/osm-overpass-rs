@@ -1,7 +1,4 @@
-use crate::{
-    OutputBuilder, Query, QueryBuilder, QueryOutput, Set, SetBuilder,
-    SetBuilderCommon, UnionSet,
-};
+use crate::{Set, SetBuilder, SetBuilderCommon, UnionSet};
 use std::borrow::Cow;
 
 /// A convenient builder API for [UnionSet].
@@ -27,20 +24,6 @@ impl<'a> SetBuilderCommon<'a> for UnionSetBuilder<'a> {
     fn union_with(mut self, other: impl Into<Cow<'a, Set<'a>>>) -> Self {
         self.0.0.insert(other.into());
         self
-    }
-
-    fn to_output(self) -> OutputBuilder<'a> {
-        OutputBuilder(QueryOutput {
-            set: Set::from(self.0).into(),
-            ..Default::default()
-        })
-    }
-
-    fn to_query(self) -> QueryBuilder<'a> {
-        QueryBuilder(Query {
-            outputs: vec![self.to_output().into()],
-            ..Default::default()
-        })
     }
 }
 

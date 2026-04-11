@@ -77,7 +77,10 @@ impl Bbox {
 
     /// Whether a point is contained by the bounding box.
     pub fn contains(&self, p: Point) -> bool {
-        p.lat <= self.north && p.lat >= self.south && p.lon <= self.east && p.lon >= self.west
+        p.lat <= self.north
+            && p.lat >= self.south
+            && p.lon <= self.east
+            && p.lon >= self.west
     }
 
     /// Modify the box to contain a point. Returns true if the bounds change.

@@ -27,16 +27,16 @@ pub trait SetBuilderCommon<'a>:
 
     /// Start configuring output options for this set.
     fn to_output(self) -> OutputBuilder<'a> {
-        OutputBuilder(QueryOutput {
+        OutputBuilder(vec![QueryOutput {
             set: self.into(),
             ..Default::default()
-        })
+        }])
     }
 
     /// Start configuring query options for this set.
     fn to_query(self) -> QueryBuilder<'a> {
         QueryBuilder(Query {
-            outputs: vec![self.to_output().into()],
+            outputs: self.to_output().0,
             ..Default::default()
         })
     }

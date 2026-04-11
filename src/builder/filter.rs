@@ -1,7 +1,6 @@
 use crate::{
-    Bbox, FilterSet, FilterType, OutputBuilder, Query, QueryBuilder,
-    QueryOutput, RecurseFilter, SaniStr, Set, SetBuilder, SetBuilderCommon,
-    TagFilter, UnionSet, UnionSetBuilder,
+    Bbox, FilterSet, FilterType, RecurseFilter, SaniStr, Set, SetBuilder,
+    SetBuilderCommon, TagFilter, UnionSet, UnionSetBuilder,
 };
 #[cfg(doc)]
 use crate::{Node, Relation, Way};
@@ -424,20 +423,6 @@ impl<'a> SetBuilderCommon<'a> for FilterSetBuilder<'a> {
         other: impl Into<Cow<'a, Set<'a>>>,
     ) -> UnionSetBuilder<'a> {
         UnionSetBuilder(UnionSet(HashSet::from([self.into(), other.into()])))
-    }
-
-    fn to_output(self) -> OutputBuilder<'a> {
-        OutputBuilder(QueryOutput {
-            set: Set::from(self.0).into(),
-            ..Default::default()
-        })
-    }
-
-    fn to_query(self) -> QueryBuilder<'a> {
-        QueryBuilder(Query {
-            outputs: vec![self.to_output().into()],
-            ..Default::default()
-        })
     }
 }
 

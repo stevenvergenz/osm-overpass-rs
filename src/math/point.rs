@@ -1,5 +1,8 @@
-use std::{fmt::Display, ops::{Add, Mul, Sub}};
 use serde::{Deserialize, Serialize};
+use std::{
+    fmt::Display,
+    ops::{Add, Mul, Sub},
+};
 
 /// The radius of the earth in meters.
 pub const R: f64 = 6_371_200.0;
@@ -27,7 +30,9 @@ impl Point {
 
     /// Guarantee that the coordinates fall within the valid range. Returns true if the point is modified.
     pub fn normalize(&mut self) -> bool {
-        if (-90.0 ..= 90.0).contains(&self.lat) && (-180.0 ..= 180.0).contains(&self.lon) {
+        if (-90.0..=90.0).contains(&self.lat)
+            && (-180.0..=180.0).contains(&self.lon)
+        {
             return false;
         }
 
@@ -62,7 +67,8 @@ impl Point {
 
         let sinlat2 = (diff.lat / 2.).sin();
         let sinlon2 = (diff.lon / 2.).sin();
-        let a = (sinlat2 * sinlat2) + (p1.lat.cos() * p2.lat.cos() * sinlon2 * sinlon2);
+        let a = (sinlat2 * sinlat2)
+            + (p1.lat.cos() * p2.lat.cos() * sinlon2 * sinlon2);
         a.sqrt().asin() * 2. * R
     }
 }
