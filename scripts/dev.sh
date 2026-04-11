@@ -5,3 +5,5 @@ P=$!
 nvim .
 kill $P
 docker compose down
+git commit --interactive -F -
+git push

@@ -1,4 +1,4 @@
-use crate::{Namer, OverpassQL, OverpassQLError, OverpassQLNamed, Set};
+use crate::{Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, Set};
 use std::{borrow::Cow, fmt::Write};
 
 /// The amount of detail to be included in [Query]-matched [Element]s.
@@ -27,7 +27,7 @@ pub enum QueryVerbosity {
 impl OverpassQL for QueryVerbosity {
     fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
         match self {
-            Self::Body => Ok(()),
+            Self::Body => write!(f, "body"),
             Self::Count => write!(f, "count"),
             Self::Ids => write!(f, "ids"),
             Self::Tags => write!(f, "tags"),
@@ -67,6 +67,26 @@ impl OverpassQL for QueryGeometry {
     }
 }
 
+/// The order in which set elements are output.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum SortOrder {
+    /// Sort by ascending element id (default).
+    #[default]
+    Asc,
+    /// Sort by quadtile index; this is roughly geographical and significantly faster than order by ids.
+    Quadtile,
+}
+
+impl OverpassQL for SortOrder {
+    fn fmt_oql(&self, f: &mut impl Write) -> Result<(), OverpassQLError> {
+        match self {
+            Self::Asc => write!(f, "asc"),
+            Self::Quadtile => write!(f, "qt"),
+        }?;
+        Ok(())
+    }
+}
+
 /// Configuration for how a set's elements should be represented.
 #[derive(Debug, Clone, Default)]
 pub struct QueryOutput<'a> {
@@ -76,6 +96,15 @@ pub struct QueryOutput<'a> {
 
     /// Adjust how much element geometry is returned from the server.
     pub geo: QueryGeometry,
+
+    /// Only return geometry within these bounds.
+    pub bbox: Option<Bbox>,
+
+    /// How to sort the returned elements.
+    pub sort: SortOrder,
+
+    /// Only output up to this many elements.
+    pub limit: Option<usize>,
 
     /// The [Set] of [Element](crate::Element)s to be returned when this query is [evaluate](crate::Overpass::evaluate)d.
     pub set: Cow<'a, Set<'a>>,
@@ -98,6 +127,10 @@ impl<'a> OverpassQLNamed<'a> for QueryOutput<'a> {
         if self.geo != QueryGeometry::default() {
             write!(f, " ")?;
             self.geo.fmt_oql(f)?;
+        }
+        if let Some(bbox) = &self.bbox {
+            write!(f, " ")?;
+            bbox.fmt_oql(f)?;
         }
         write!(f, ";")?;
         Ok(())
