@@ -1,9 +1,5 @@
 use crate::{Namer, OverpassQLError, OverpassQLNamed, Set};
-use std::{
-    borrow::Cow,
-    collections::{HashSet, hash_set::IntoIter},
-    fmt::Write,
-};
+use std::{borrow::Cow, collections::HashSet, fmt::Write};
 
 /// A [Set] that is composed of all elements found in any member set.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -23,7 +19,7 @@ impl<'a> OverpassQLNamed<'a> for UnionSet<'a> {
     {
         write!(f, "(")?;
         for i in &self.0 {
-            write!(f, ".{};", namer.get_or_assign(i))?;
+            write!(f, ".{};", namer.get(i))?;
         }
         write!(f, ")")?;
         Ok(())
@@ -32,7 +28,9 @@ impl<'a> OverpassQLNamed<'a> for UnionSet<'a> {
 
 impl<'a> UnionSet<'a> {
     /// An iterator of the sets that must be defined before this set.
-    pub fn dependencies(&self) -> IntoIter<&Set<'a>> {
+    pub fn dependencies(
+        &self,
+    ) -> std::collections::hash_set::IntoIter<&Set<'a>> {
         self.0
             .iter()
             .map(|c| c.as_ref())
@@ -47,6 +45,16 @@ where
 {
     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
         Self(iter.into_iter().map(|i| i.into()).collect())
+    }
+}
+
+impl<'a> TryFrom<Set<'a>> for UnionSet<'a> {
+    type Error = &'static str;
+    fn try_from(value: Set<'a>) -> Result<Self, Self::Error> {
+        match value {
+            Set::Union(u) => Ok(u),
+            _ => Err("bad variant"),
+        }
     }
 }
 

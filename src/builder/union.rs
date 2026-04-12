@@ -5,7 +5,7 @@ use std::borrow::Cow;
 #[derive(Debug, Clone)]
 pub struct UnionSetBuilder<'a>(
     /// The set being modified.
-    pub UnionSet<'a>,
+    pub Set<'a>,
 );
 
 impl SetBuilder<'_> {
@@ -16,13 +16,22 @@ impl SetBuilder<'_> {
     where
         T: Into<Cow<'a, Set<'a>>>,
     {
-        UnionSetBuilder(sets.into_iter().collect())
+        UnionSetBuilder(Set::Union(sets.into_iter().collect()))
     }
 }
 
 impl<'a> SetBuilderCommon<'a> for UnionSetBuilder<'a> {
+    type Inner = UnionSet<'a>;
+
+    fn inner(&mut self) -> &mut Self::Inner {
+        match &mut self.0 {
+            Set::Union(s) => s,
+            _ => panic!(),
+        }
+    }
+
     fn union_with(mut self, other: impl Into<Cow<'a, Set<'a>>>) -> Self {
-        self.0.0.insert(other.into());
+        self.inner().0.insert(other.into());
         self
     }
 }
@@ -39,10 +48,37 @@ impl<'a> Into<Cow<'a, Set<'a>>> for UnionSetBuilder<'a> {
     }
 }
 
+impl<'a> Into<Cow<'a, Set<'a>>> for &'a UnionSetBuilder<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
+        Cow::Borrowed(self.as_ref())
+    }
+}
+
 impl<'a> IntoIterator for UnionSetBuilder<'a> {
     type Item = UnionSetBuilder<'a>;
     type IntoIter = std::array::IntoIter<Self::Item, 1>;
     fn into_iter(self) -> Self::IntoIter {
         [self].into_iter()
+    }
+}
+
+impl<'a> AsRef<Set<'a>> for UnionSetBuilder<'a> {
+    fn as_ref(&self) -> &Set<'a> {
+        &self.0
+    }
+}
+
+impl<'a> AsMut<Set<'a>> for UnionSetBuilder<'a> {
+    fn as_mut(&mut self) -> &mut Set<'a> {
+        &mut self.0
+    }
+}
+
+impl<'a, A> FromIterator<A> for UnionSetBuilder<'a>
+where
+    A: Into<Cow<'a, Set<'a>>>,
+{
+    fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
+        Self(Set::Union(UnionSet::from_iter(iter)))
     }
 }

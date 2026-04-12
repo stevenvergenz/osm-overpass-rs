@@ -27,3 +27,6 @@ pub use union::*;
 
 mod output;
 pub use output::*;
+
+mod difference;
+pub use difference::*;

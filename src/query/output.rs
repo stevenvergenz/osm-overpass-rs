@@ -119,7 +119,7 @@ impl<'a> OverpassQLNamed<'a> for QueryOutput<'a> {
     where
         'b: 'c,
     {
-        write!(f, ".{} out", namer.get_or_assign(&self.set))?;
+        write!(f, ".{} out", namer.get(&self.set))?;
         if self.verbosity != QueryVerbosity::default() {
             write!(f, " ")?;
             self.verbosity.fmt_oql(f)?;

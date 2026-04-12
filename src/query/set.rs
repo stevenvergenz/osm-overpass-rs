@@ -1,6 +1,8 @@
 #[cfg(doc)]
 use crate::Element;
-use crate::{FilterSet, Namer, OverpassQLError, OverpassQLNamed, UnionSet};
+use crate::{
+    DifferenceSet, FilterSet, Namer, OverpassQLError, OverpassQLNamed, UnionSet,
+};
 use std::{
     borrow::Cow,
     collections::HashSet,
@@ -17,6 +19,8 @@ pub enum Set<'a> {
     Filter(FilterSet<'a>),
     /// The union block statement. See [UnionSet].
     Union(UnionSet<'a>),
+    /// The difference block statement. See [DifferenceSet].
+    Difference(DifferenceSet<'a>),
     /// A string of raw OverpassQL that generates a set. May cause the query to not compile!
     Raw(String),
 }
@@ -39,10 +43,11 @@ impl<'a> OverpassQLNamed<'a> for Set<'a> {
         match self {
             Self::Filter(filter) => filter.fmt_oql_named(f, namer)?,
             Self::Union(union) => union.fmt_oql_named(f, namer)?,
+            Self::Difference(s) => s.fmt_oql_named(f, namer)?,
             Self::Raw(raw) => write!(f, "{raw}")?,
         };
 
-        write!(f, "->.{}", namer.get_or_assign(self))?;
+        write!(f, "->.{}", namer.get(self))?;
 
         Ok(())
     }
@@ -52,8 +57,9 @@ impl<'a> Set<'a> {
     /// Returns an iterator of sets that must be defined before this one.
     pub fn dependencies(&self) -> impl ExactSizeIterator<Item = &Set<'a>> {
         match self {
-            Self::Filter(f) => f.dependencies(),
-            Self::Union(u) => u.dependencies(),
+            Self::Filter(s) => s.dependencies(),
+            Self::Union(s) => s.dependencies(),
+            Self::Difference(s) => s.dependencies(),
             Self::Raw(_) => HashSet::new().into_iter(),
         }
     }
@@ -93,5 +99,11 @@ impl<'a> From<FilterSet<'a>> for Set<'a> {
 impl<'a> From<UnionSet<'a>> for Set<'a> {
     fn from(value: UnionSet<'a>) -> Self {
         Self::Union(value)
+    }
+}
+
+impl<'a> From<DifferenceSet<'a>> for Set<'a> {
+    fn from(value: DifferenceSet<'a>) -> Self {
+        Self::Difference(value)
     }
 }

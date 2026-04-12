@@ -2,11 +2,7 @@ use crate::{
     Bbox, Namer, OverpassQL, OverpassQLError, OverpassQLNamed, RecurseFilter,
     Set, TagFilter,
 };
-use std::{
-    borrow::Cow,
-    collections::{HashSet, hash_set::IntoIter},
-    fmt::Write,
-};
+use std::{borrow::Cow, collections::HashSet, fmt::Write};
 
 /// The type of element selected by a [FilterSet].
 #[derive(Debug, Clone, Copy, Default)]
@@ -91,7 +87,7 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
         self.filter_type.fmt_oql(f)?;
 
         for input in &self.inputs {
-            write!(f, ".{}", namer.get_or_assign(input))?;
+            write!(f, ".{}", namer.get(input))?;
         }
 
         if self.id_filters.len() > 0 {
@@ -123,13 +119,25 @@ impl<'a> OverpassQLNamed<'a> for FilterSet<'a> {
 
 impl<'a> FilterSet<'a> {
     /// The sets that must be defined before this set.
-    pub fn dependencies(&self) -> IntoIter<&Set<'a>> {
+    pub fn dependencies(
+        &self,
+    ) -> std::collections::hash_set::IntoIter<&Set<'a>> {
         self.inputs
             .iter()
             .map(|i| i.as_ref())
             .chain(self.recurse_filters.iter().map(|r| r.input()))
             .collect::<HashSet<_>>()
             .into_iter()
+    }
+}
+
+impl<'a> TryFrom<Set<'a>> for FilterSet<'a> {
+    type Error = &'static str;
+    fn try_from(value: Set<'a>) -> Result<Self, Self::Error> {
+        match value {
+            Set::Filter(s) => Ok(s),
+            _ => Err("wrong variant"),
+        }
     }
 }
 

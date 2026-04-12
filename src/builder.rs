@@ -10,47 +10,30 @@ pub use query::*;
 mod output;
 pub use output::*;
 
-use crate::{Query, QueryOutput, Set};
-use enum_dispatch::enum_dispatch;
+mod common;
+pub use common::*;
+
+use crate::Set;
 use std::borrow::Cow;
-
-/// Trait to maintain consistency between builder types.
-#[enum_dispatch]
-pub trait SetBuilderCommon<'a>:
-    Into<Set<'a>> + Into<Cow<'a, Set<'a>>> + IntoIterator<Item = Self>
-{
-    /// Create a new set with all elements from both this and another set.
-    fn union_with(
-        self,
-        other: impl Into<Cow<'a, Set<'a>>>,
-    ) -> UnionSetBuilder<'a>;
-
-    /// Start configuring output options for this set.
-    fn to_output(self) -> OutputBuilder<'a> {
-        OutputBuilder(vec![QueryOutput {
-            set: self.into(),
-            ..Default::default()
-        }])
-    }
-
-    /// Start configuring query options for this set.
-    fn to_query(self) -> QueryBuilder<'a> {
-        QueryBuilder(Query {
-            outputs: self.to_output().0,
-            ..Default::default()
-        })
-    }
-}
 
 /// An enum of all the types of builders that produce sets.
 #[doc = include_str!("../doc/setbuilder.md")]
 #[derive(Debug, Clone)]
-#[enum_dispatch(SetBuilderCommon)]
 pub enum SetBuilder<'a> {
     /// Builds a filter set.
     Filter(FilterSetBuilder<'a>),
     /// Builds a union set.
     Union(UnionSetBuilder<'a>),
+}
+
+impl<'a> SetBuilderCommon<'a> for SetBuilder<'a> {
+    type Inner = Set<'a>;
+    fn inner(&mut self) -> &mut Self::Inner {
+        match self {
+            Self::Filter(f) => &mut f.0,
+            Self::Union(u) => &mut u.0,
+        }
+    }
 }
 
 impl<'a> Into<Set<'a>> for SetBuilder<'a> {
@@ -68,10 +51,34 @@ impl<'a> Into<Cow<'a, Set<'a>>> for SetBuilder<'a> {
     }
 }
 
+impl<'a> Into<Cow<'a, Set<'a>>> for &'a SetBuilder<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
+        Cow::Borrowed(self.as_ref())
+    }
+}
+
 impl<'a> IntoIterator for SetBuilder<'a> {
     type Item = SetBuilder<'a>;
     type IntoIter = std::array::IntoIter<SetBuilder<'a>, 1>;
     fn into_iter(self) -> Self::IntoIter {
         [self].into_iter()
+    }
+}
+
+impl<'a> AsRef<Set<'a>> for SetBuilder<'a> {
+    fn as_ref(&self) -> &Set<'a> {
+        match self {
+            Self::Filter(s) => s.as_ref(),
+            Self::Union(s) => s.as_ref(),
+        }
+    }
+}
+
+impl<'a> AsMut<Set<'a>> for SetBuilder<'a> {
+    fn as_mut(&mut self) -> &mut Set<'a> {
+        match self {
+            Self::Filter(s) => s.as_mut(),
+            Self::Union(u) => u.as_mut(),
+        }
     }
 }

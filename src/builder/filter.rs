@@ -1,74 +1,74 @@
 use crate::{
     Bbox, FilterSet, FilterType, RecurseFilter, SaniStr, Set, SetBuilder,
-    SetBuilderCommon, TagFilter, UnionSet, UnionSetBuilder,
+    SetBuilderCommon, TagFilter, UnionSetBuilder,
 };
 #[cfg(doc)]
 use crate::{Node, Relation, Way};
-use std::{borrow::Cow, collections::HashSet};
+use std::borrow::Cow;
 
 /// A convenient builder API for [FilterSet].
 #[derive(Debug, Clone)]
 pub struct FilterSetBuilder<'a>(
     /// The set being configured.
-    pub FilterSet<'a>,
+    pub Set<'a>,
 );
 
 /// Methods to create new [FilterSet]s.
 impl SetBuilder<'_> {
     /// Start a new filter set containing [Node]s, i.e. [FilterType::Node].
     pub fn nodes<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::Node,
             ..Default::default()
-        })
+        }))
     }
 
     /// Start a new filter set containing [Way]s, i.e. [FilterType::Way].
     pub fn ways<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::Way,
             ..Default::default()
-        })
+        }))
     }
 
     /// Start a new filter set containing [Relation]s, i.e. [FilterType::Relation].
     pub fn relations<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::Relation,
             ..Default::default()
-        })
+        }))
     }
 
     /// Start a new filter set containing any element type, i.e. [FilterType::Any].
     pub fn any_type<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::Any,
             ..Default::default()
-        })
+        }))
     }
 
     /// Start a new filter set containing [Node]s or [Way]s, i.e. [FilterType::NodeOrWay].
     pub fn nodes_or_ways<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrWay,
             ..Default::default()
-        })
+        }))
     }
 
     /// Start a new filter set containing [Node]s or [Relation]s, i.e. [FilterType::NodeOrRelation].
     pub fn nodes_or_relations<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::NodeOrRelation,
             ..Default::default()
-        })
+        }))
     }
 
     /// Start a new filter set containing [Way]s or [Relation]s, i.e. [FilterType::WayOrRelation].
     pub fn ways_or_relations<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::WayOrRelation,
             ..Default::default()
-        })
+        }))
     }
 
     /*
@@ -82,10 +82,10 @@ impl SetBuilder<'_> {
 
     /// Start a new filter set containing elements identified as areas, i.e. [FilterType::Area].
     pub fn areas<'a>() -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
+        FilterSetBuilder(Set::Filter(FilterSet {
             filter_type: FilterType::Area,
             ..Default::default()
-        })
+        }))
     }
 }
 
@@ -96,55 +96,59 @@ impl<'a> FilterSetBuilder<'a> {
         T: Into<Cow<'a, Set<'a>>>,
     {
         for i in sets.into_iter() {
-            self.0.inputs.insert(i.into());
+            self.inner().inputs.insert(i.into());
         }
         self
     }
 
     /// Restrict this set to only elements with the given identifier. See [FilterSet::id_filters].
     pub fn with_id(mut self, id: i64) -> Self {
-        self.0.id_filters.clear();
-        self.0.id_filters.insert(id);
+        self.inner().id_filters.clear();
+        self.inner().id_filters.insert(id);
         self
     }
 
     /// Restrict this set to only elements with the given identifiers. See [FilterSet::id_filters].
     pub fn with_ids(mut self, ids: impl IntoIterator<Item = i64>) -> Self {
-        self.0.id_filters.clear();
+        self.inner().id_filters.clear();
         for id in ids {
-            self.0.id_filters.insert(id);
+            self.inner().id_filters.insert(id);
         }
         self
     }
 
     /// Restrict this set to only elements contained by the given bounding box. See [FilterSet::bbox_filter].
     pub fn within_bounds(mut self, bbox: impl Into<Bbox>) -> Self {
-        self.0.bbox_filter = Some(bbox.into());
+        self.inner().bbox_filter = Some(bbox.into());
         self
     }
 
     /// Restrict this set to only elements that have a tag of the given name. See [TagFilter::Exists].
     pub fn with_tag(mut self, tag: &'a str) -> Self {
-        self.0.tag_filters.insert(TagFilter::exists(tag));
+        self.inner().tag_filters.insert(TagFilter::exists(tag));
         self
     }
 
     /// Restrict this set to only elements that do not have a tag of the given name. See [TagFilter::NotExists].
     pub fn without_tag(mut self, tag: &'a str) -> Self {
-        self.0.tag_filters.insert(TagFilter::not_exists(tag));
+        self.inner().tag_filters.insert(TagFilter::not_exists(tag));
         self
     }
 
     /// Restrict this set to only elements that have the given tag with the given value. See [TagFilter::Equals].
     pub fn with_tag_value(mut self, tag: &'a str, value: &'a str) -> Self {
-        self.0.tag_filters.insert(TagFilter::equals(tag, value));
+        self.inner()
+            .tag_filters
+            .insert(TagFilter::equals(tag, value));
         self
     }
 
     /// Restrict this set to only elements that do not have the given tag, or have a value different from the given value.
     /// See [TagFilter::NotEquals].
     pub fn without_tag_value(mut self, tag: &'a str, value: &'a str) -> Self {
-        self.0.tag_filters.insert(TagFilter::not_equals(tag, value));
+        self.inner()
+            .tag_filters
+            .insert(TagFilter::not_equals(tag, value));
         self
     }
 
@@ -155,7 +159,7 @@ impl<'a> FilterSetBuilder<'a> {
         tag: &'a str,
         value_pat: &'a str,
     ) -> Self {
-        self.0
+        self.inner()
             .tag_filters
             .insert(TagFilter::matches(tag, value_pat));
         self
@@ -169,7 +173,7 @@ impl<'a> FilterSetBuilder<'a> {
         tag: &'a str,
         value_pat: &'a str,
     ) -> Self {
-        self.0
+        self.inner()
             .tag_filters
             .insert(TagFilter::not_matches(tag, value_pat));
         self
@@ -183,7 +187,7 @@ impl<'a> FilterSetBuilder<'a> {
         tag_pat: &'a str,
         value_pat: &'a str,
     ) -> Self {
-        self.0
+        self.inner()
             .tag_filters
             .insert(TagFilter::name_value_matches(tag_pat, value_pat));
         self
@@ -195,7 +199,9 @@ impl<'a> FilterSetBuilder<'a> {
         tags: impl IntoIterator<Item = &'a str>,
     ) -> Self {
         for i in tags {
-            self.0.tag_filters.insert(TagFilter::Exists(SaniStr(i)));
+            self.inner()
+                .tag_filters
+                .insert(TagFilter::Exists(SaniStr(i)));
         }
         self
     }
@@ -206,7 +212,9 @@ impl<'a> FilterSetBuilder<'a> {
         tags: impl IntoIterator<Item = &'a str>,
     ) -> Self {
         for i in tags {
-            self.0.tag_filters.insert(TagFilter::NotExists(SaniStr(i)));
+            self.inner()
+                .tag_filters
+                .insert(TagFilter::NotExists(SaniStr(i)));
         }
         self
     }
@@ -217,7 +225,7 @@ impl<'a> FilterSetBuilder<'a> {
         tags: impl IntoIterator<Item = (&'a str, &'a str)>,
     ) -> Self {
         for (n, v) in tags {
-            self.0
+            self.inner()
                 .tag_filters
                 .insert(TagFilter::Equals(SaniStr(n), SaniStr(v)));
         }
@@ -231,7 +239,7 @@ impl<'a> FilterSetBuilder<'a> {
         tags: impl IntoIterator<Item = (&'a str, &'a str)>,
     ) -> Self {
         for (n, v) in tags {
-            self.0
+            self.inner()
                 .tag_filters
                 .insert(TagFilter::NotEquals(SaniStr(n), SaniStr(v)));
         }
@@ -245,7 +253,7 @@ impl<'a> FilterSetBuilder<'a> {
         tags: impl IntoIterator<Item = (&'a str, &'a str)>,
     ) -> Self {
         for (n, v) in tags {
-            self.0
+            self.inner()
                 .tag_filters
                 .insert(TagFilter::Matches(SaniStr(n), SaniStr(v)));
         }
@@ -260,7 +268,7 @@ impl<'a> FilterSetBuilder<'a> {
         tags: impl IntoIterator<Item = (&'a str, &'a str)>,
     ) -> Self {
         for (n, v) in tags {
-            self.0
+            self.inner()
                 .tag_filters
                 .insert(TagFilter::NotMatches(SaniStr(n), SaniStr(v)));
         }
@@ -275,7 +283,7 @@ impl<'a> FilterSetBuilder<'a> {
         tags: impl IntoIterator<Item = (&'a str, &'a str)>,
     ) -> Self {
         for (n, v) in tags {
-            self.0
+            self.inner()
                 .tag_filters
                 .insert(TagFilter::NameValueMatches(SaniStr(n), SaniStr(v)));
         }
@@ -285,7 +293,7 @@ impl<'a> FilterSetBuilder<'a> {
     /// Restrict this set to only [Node]s that are members of a [Way] in the given set.
     /// See [RecurseFilter::WithinWays].
     pub fn within_ways(mut self, set: impl Into<Cow<'a, Set<'a>>>) -> Self {
-        self.0
+        self.inner()
             .recurse_filters
             .insert(RecurseFilter::WithinWays { input: set.into() });
         self
@@ -297,7 +305,7 @@ impl<'a> FilterSetBuilder<'a> {
         mut self,
         set: impl Into<Cow<'a, Set<'a>>>,
     ) -> Self {
-        self.0
+        self.inner()
             .recurse_filters
             .insert(RecurseFilter::WithinRelations {
                 input: set.into(),
@@ -314,7 +322,7 @@ impl<'a> FilterSetBuilder<'a> {
         role: &'a str,
         set: impl Into<Cow<'a, Set<'a>>>,
     ) -> Self {
-        self.0
+        self.inner()
             .recurse_filters
             .insert(RecurseFilter::WithinRelations {
                 input: set.into(),
@@ -329,7 +337,7 @@ impl<'a> FilterSetBuilder<'a> {
         mut self,
         set: impl Into<Cow<'a, Set<'a>>>,
     ) -> Self {
-        self.0
+        self.inner()
             .recurse_filters
             .insert(RecurseFilter::ContainingNodes {
                 input: set.into(),
@@ -346,7 +354,7 @@ impl<'a> FilterSetBuilder<'a> {
         role: &'a str,
         set: impl Into<Cow<'a, Set<'a>>>,
     ) -> Self {
-        self.0
+        self.inner()
             .recurse_filters
             .insert(RecurseFilter::ContainingNodes {
                 input: set.into(),
@@ -358,7 +366,7 @@ impl<'a> FilterSetBuilder<'a> {
     /// Restrict this set to only elements that have a [Way] in this set as a member.
     /// See [RecurseFilter::ContainingWays].
     pub fn containing_ways(mut self, set: impl Into<Cow<'a, Set<'a>>>) -> Self {
-        self.0
+        self.inner()
             .recurse_filters
             .insert(RecurseFilter::ContainingWays {
                 input: set.into(),
@@ -375,7 +383,7 @@ impl<'a> FilterSetBuilder<'a> {
         role: &'a str,
         set: impl Into<Cow<'a, Set<'a>>>,
     ) -> Self {
-        self.0
+        self.inner()
             .recurse_filters
             .insert(RecurseFilter::ContainingWays {
                 input: set.into(),
@@ -390,12 +398,12 @@ impl<'a> FilterSetBuilder<'a> {
         mut self,
         set: impl Into<Cow<'a, Set<'a>>>,
     ) -> Self {
-        self.0
-            .recurse_filters
-            .insert(RecurseFilter::ContainingRelations {
+        self.inner().recurse_filters.insert(
+            RecurseFilter::ContainingRelations {
                 input: set.into(),
                 role: None,
-            });
+            },
+        );
         self
     }
 
@@ -407,22 +415,31 @@ impl<'a> FilterSetBuilder<'a> {
         role: &'a str,
         set: impl Into<Cow<'a, Set<'a>>>,
     ) -> Self {
-        self.0
-            .recurse_filters
-            .insert(RecurseFilter::ContainingRelations {
+        self.inner().recurse_filters.insert(
+            RecurseFilter::ContainingRelations {
                 input: set.into(),
                 role: Some(SaniStr(role)),
-            });
+            },
+        );
         self
     }
 }
 
 impl<'a> SetBuilderCommon<'a> for FilterSetBuilder<'a> {
+    type Inner = FilterSet<'a>;
+
+    fn inner(&mut self) -> &mut Self::Inner {
+        match &mut self.0 {
+            Set::Filter(f) => f,
+            _ => panic!(),
+        }
+    }
+
     fn union_with(
         self,
         other: impl Into<Cow<'a, Set<'a>>>,
     ) -> UnionSetBuilder<'a> {
-        UnionSetBuilder(UnionSet(HashSet::from([self.into(), other.into()])))
+        UnionSetBuilder::from_iter([self.into(), other.into()])
     }
 }
 
@@ -438,11 +455,29 @@ impl<'a> Into<Cow<'a, Set<'a>>> for FilterSetBuilder<'a> {
     }
 }
 
+impl<'a> Into<Cow<'a, Set<'a>>> for &'a FilterSetBuilder<'a> {
+    fn into(self) -> Cow<'a, Set<'a>> {
+        Cow::Borrowed(self.as_ref())
+    }
+}
+
 impl<'a> IntoIterator for FilterSetBuilder<'a> {
     type Item = FilterSetBuilder<'a>;
     type IntoIter = std::array::IntoIter<Self::Item, 1>;
     fn into_iter(self) -> Self::IntoIter {
         [self].into_iter()
+    }
+}
+
+impl<'a> AsRef<Set<'a>> for FilterSetBuilder<'a> {
+    fn as_ref(&self) -> &Set<'a> {
+        &self.0
+    }
+}
+
+impl<'a> AsMut<Set<'a>> for FilterSetBuilder<'a> {
+    fn as_mut(&mut self) -> &mut Set<'a> {
+        &mut self.0
     }
 }
 

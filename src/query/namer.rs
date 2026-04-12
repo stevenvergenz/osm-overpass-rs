@@ -11,7 +11,7 @@ where
 }
 
 impl<'a, 'b> Namer<'a, 'b> {
-    pub fn get_or_assign(&mut self, item: &'b Set<'a>) -> &str {
+    pub fn get(&mut self, item: &'b Set<'a>) -> &str {
         self.names
             .entry(item)
             .or_insert_with(|| self.iter.next().unwrap())

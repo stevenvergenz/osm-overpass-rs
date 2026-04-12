@@ -79,10 +79,10 @@ impl<'a> OverpassQLNamed<'a> for RecurseFilter<'a> {
         };
         match role {
             Some(r) => {
-                write!(f, "({code}.{n}:{r}", n = namer.get_or_assign(input))?;
+                write!(f, "({code}.{n}:{r}", n = namer.get(input))?;
             }
             None => {
-                write!(f, "({code}.{n})", n = namer.get_or_assign(input))?;
+                write!(f, "({code}.{n})", n = namer.get(input))?;
             }
         };
         Ok(())
