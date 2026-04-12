@@ -7,14 +7,18 @@ use std::{
 /// The radius of the earth in meters.
 pub const R: f64 = 6_371_200.0;
 
+/// The arc-distance within which coordinates are considered equal. In degrees longitude at the
+/// equator this is roughly 11 centimeters.
+pub const EPSILON: f64 = 1e-6;
+
 /// The conversion factor from degrees to radians.
-pub const DEG2RAD: f64 = 1f64.to_radians();
+const DEG2RAD: f64 = 1f64.to_radians();
 
 /// The conversion factor from radians to degrees.
-pub const RAD2DEG: f64 = 1f64.to_degrees();
+const RAD2DEG: f64 = 1f64.to_degrees();
 
 /// A geographic coordinate.
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct Point {
     /// The latitude of a coordinate in degrees north of the equator [-90 to 90].
     pub lat: f64,
@@ -70,6 +74,14 @@ impl Point {
         let a = (sinlat2 * sinlat2)
             + (p1.lat.cos() * p2.lat.cos() * sinlon2 * sinlon2);
         a.sqrt().asin() * 2. * R
+    }
+}
+
+/// Whether two coordinate pairs are approximately equal, i.e. both coordinates are within
+/// [EPSILON] of each other.
+impl PartialEq for Point {
+    fn eq(&self, other: &Self) -> bool {
+        (self.lat - other.lat).abs() < EPSILON && (self.lon - other.lon).abs() < EPSILON
     }
 }
 
@@ -147,9 +159,6 @@ mod test {
     fn normalize() {
         let actual = Point::new(170., 330.).normalized();
         let expected = Point::new(10., 150.);
-
-        if actual.distance_to(expected) >= 1. {
-            panic!("Expected {expected}, got {actual}");
-        }
+        assert_eq!(actual, expected);
     }
 }
