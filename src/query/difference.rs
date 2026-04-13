@@ -27,6 +27,17 @@ impl<'a> OverpassQLNamed<'a> for DifferenceSet<'a> {
 }
 
 impl<'a> DifferenceSet<'a> {
+    /// Create a new difference set.
+    pub fn new(
+        input: impl Into<Cow<'a, Set<'a>>>,
+        exclude: impl Into<Cow<'a, Set<'a>>>,
+    ) -> Self {
+        Self {
+            input: Box::new(input.into()),
+            exclude: Box::new(exclude.into()),
+        }
+    }
+
     /// The sets that must be defined before this set.
     pub fn dependencies(
         &self,

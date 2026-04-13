@@ -5,7 +5,7 @@ use crate::{
 use std::{borrow::Cow, collections::HashSet, fmt::Write};
 
 /// The type of element selected by a [FilterSet].
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FilterType {
     /// [Node]s
     Node,

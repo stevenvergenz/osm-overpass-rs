@@ -1,7 +1,7 @@
 use crate::{
-    OutputBuilder, Query, QueryBuilder, QueryOutput, Set, UnionSetBuilder,
+    DifferenceSetBuilder, FilterSet, FilterSetBuilder, FilterType, OutputBuilder, Query, QueryBuilder, QueryOutput, Set, UnionSetBuilder
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashSet};
 
 /// Trait to maintain consistency between builder types.
 pub trait SetBuilderCommon<'a>:
@@ -17,6 +17,17 @@ where
     /// The specific set variant for this builder.
     type Inner: Into<Set<'a>> + TryFrom<Set<'a>>;
 
+    /// A mutable reference to the inner set type.
+    fn inner(&mut self) -> &mut Self::Inner;
+
+    /// Create a new set with elements from this set that meet certain criteria.
+    fn filter(self, filter_type: FilterType) -> FilterSetBuilder<'a> {
+        FilterSetBuilder(FilterSet {
+            filter_type,
+            inputs: HashSet::from([self.into()]),
+            ..Default::default()
+        }.into())
+    }
     /// Create a new set with all elements from both this and another set.
     fn union_with(
         self,
@@ -25,8 +36,13 @@ where
         UnionSetBuilder::from_iter([self.into(), other.into()])
     }
 
-    /// A mutable reference to the inner set type.
-    fn inner(&mut self) -> &mut Self::Inner;
+    /// Exclude a set's elements from this set.
+    fn without(
+        self,
+        exclude: impl Into<Cow<'a, Set<'a>>>,
+    ) -> DifferenceSetBuilder<'a> {
+        DifferenceSetBuilder::new(self, exclude)
+    }
 
     /// Start configuring output options for this set.
     fn to_output(self) -> OutputBuilder<'a> {

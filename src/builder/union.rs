@@ -8,6 +8,7 @@ pub struct UnionSetBuilder<'a>(
     pub Set<'a>,
 );
 
+/// Methods to build new [UnionSet]s.
 impl SetBuilder<'_> {
     /// Collect the provided sets into a new [UnionSet]
     pub fn union<'a, T>(

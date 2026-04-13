@@ -4,6 +4,9 @@ pub use filter::*;
 mod union;
 pub use union::*;
 
+mod difference;
+pub use difference::*;
+
 mod query;
 pub use query::*;
 
@@ -24,6 +27,8 @@ pub enum SetBuilder<'a> {
     Filter(FilterSetBuilder<'a>),
     /// Builds a union set.
     Union(UnionSetBuilder<'a>),
+    /// Builds a difference set.
+    Difference(DifferenceSetBuilder<'a>),
 }
 
 impl<'a> SetBuilderCommon<'a> for SetBuilder<'a> {
@@ -32,6 +37,7 @@ impl<'a> SetBuilderCommon<'a> for SetBuilder<'a> {
         match self {
             Self::Filter(f) => &mut f.0,
             Self::Union(u) => &mut u.0,
+            Self::Difference(d) => &mut d.0,
         }
     }
 }
@@ -41,6 +47,7 @@ impl<'a> Into<Set<'a>> for SetBuilder<'a> {
         match self {
             Self::Filter(f) => f.into(),
             Self::Union(u) => u.into(),
+            Self::Difference(d) => d.into(),
         }
     }
 }
@@ -70,6 +77,7 @@ impl<'a> AsRef<Set<'a>> for SetBuilder<'a> {
         match self {
             Self::Filter(s) => s.as_ref(),
             Self::Union(s) => s.as_ref(),
+            Self::Difference(d) => d.as_ref(),
         }
     }
 }
@@ -79,6 +87,7 @@ impl<'a> AsMut<Set<'a>> for SetBuilder<'a> {
         match self {
             Self::Filter(s) => s.as_mut(),
             Self::Union(u) => u.as_mut(),
+            Self::Difference(d) => d.as_mut(),
         }
     }
 }

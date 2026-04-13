@@ -120,7 +120,7 @@ assert!(
     * ✅ out limit
 * Sets
     * ✅ union
-    * ❌ difference
+    * ✅ difference
     * ✅ intersection
     * ❌ if-block
     * ❌ foreach

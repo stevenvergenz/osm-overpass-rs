@@ -81,7 +81,8 @@ impl Point {
 /// [EPSILON] of each other.
 impl PartialEq for Point {
     fn eq(&self, other: &Self) -> bool {
-        (self.lat - other.lat).abs() < EPSILON && (self.lon - other.lon).abs() < EPSILON
+        (self.lat - other.lat).abs() < EPSILON
+            && (self.lon - other.lon).abs() < EPSILON
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::{
     Bbox, FilterSet, FilterType, RecurseFilter, SaniStr, Set, SetBuilder,
-    SetBuilderCommon, TagFilter, UnionSetBuilder,
+    SetBuilderCommon, TagFilter,
 };
 #[cfg(doc)]
 use crate::{Node, Relation, Way};
@@ -435,11 +435,12 @@ impl<'a> SetBuilderCommon<'a> for FilterSetBuilder<'a> {
         }
     }
 
-    fn union_with(
-        self,
-        other: impl Into<Cow<'a, Set<'a>>>,
-    ) -> UnionSetBuilder<'a> {
-        UnionSetBuilder::from_iter([self.into(), other.into()])
+    fn filter(mut self, filter_type: FilterType) -> FilterSetBuilder<'a> {
+        if filter_type == self.inner().filter_type {
+            self
+        } else {
+            SetBuilderCommon::filter(self, filter_type)
+        }
     }
 }
 
