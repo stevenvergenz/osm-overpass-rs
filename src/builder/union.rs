@@ -27,7 +27,7 @@ impl<'a> SetBuilderCommon<'a> for UnionSetBuilder<'a> {
     fn inner(&mut self) -> &mut Self::Inner {
         match &mut self.0 {
             Set::Union(s) => s,
-            _ => panic!(),
+            _ => panic!("bad variant"),
         }
     }
 
@@ -45,18 +45,18 @@ impl<'a> Into<Set<'a>> for UnionSetBuilder<'a> {
 
 impl<'a> Into<Cow<'a, Set<'a>>> for UnionSetBuilder<'a> {
     fn into(self) -> Cow<'a, Set<'a>> {
-        Cow::Owned(self.into())
+        self.0.into()
     }
 }
 
 impl<'a> Into<Cow<'a, Set<'a>>> for &'a UnionSetBuilder<'a> {
     fn into(self) -> Cow<'a, Set<'a>> {
-        Cow::Borrowed(self.as_ref())
+        self.as_ref().into()
     }
 }
 
 impl<'a> IntoIterator for UnionSetBuilder<'a> {
-    type Item = UnionSetBuilder<'a>;
+    type Item = Self;
     type IntoIter = std::array::IntoIter<Self::Item, 1>;
     fn into_iter(self) -> Self::IntoIter {
         [self].into_iter()

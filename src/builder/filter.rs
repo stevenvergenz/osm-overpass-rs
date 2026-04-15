@@ -431,15 +431,15 @@ impl<'a> SetBuilderCommon<'a> for FilterSetBuilder<'a> {
     fn inner(&mut self) -> &mut Self::Inner {
         match &mut self.0 {
             Set::Filter(f) => f,
-            _ => panic!(),
+            _ => panic!("bad variant"),
         }
     }
 
-    fn filter(mut self, filter_type: FilterType) -> FilterSetBuilder<'a> {
+    fn filter_to(mut self, filter_type: FilterType) -> FilterSetBuilder<'a> {
         if filter_type == self.inner().filter_type {
             self
         } else {
-            SetBuilderCommon::filter(self, filter_type)
+            SetBuilderCommon::filter_to(self, filter_type)
         }
     }
 }
@@ -452,18 +452,18 @@ impl<'a> Into<Set<'a>> for FilterSetBuilder<'a> {
 
 impl<'a> Into<Cow<'a, Set<'a>>> for FilterSetBuilder<'a> {
     fn into(self) -> Cow<'a, Set<'a>> {
-        Cow::Owned(self.into())
+        self.0.into()
     }
 }
 
 impl<'a> Into<Cow<'a, Set<'a>>> for &'a FilterSetBuilder<'a> {
     fn into(self) -> Cow<'a, Set<'a>> {
-        Cow::Borrowed(self.as_ref())
+        self.as_ref().into()
     }
 }
 
 impl<'a> IntoIterator for FilterSetBuilder<'a> {
-    type Item = FilterSetBuilder<'a>;
+    type Item = Self;
     type IntoIter = std::array::IntoIter<Self::Item, 1>;
     fn into_iter(self) -> Self::IntoIter {
         [self].into_iter()

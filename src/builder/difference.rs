@@ -57,7 +57,7 @@ impl<'a> Into<Cow<'a, Set<'a>>> for &'a DifferenceSetBuilder<'a> {
 
 impl<'a> IntoIterator for DifferenceSetBuilder<'a> {
     type Item = Self;
-    type IntoIter = std::array::IntoIter<Self, 1>;
+    type IntoIter = std::array::IntoIter<Self::Item, 1>;
 
     fn into_iter(self) -> Self::IntoIter {
         [self].into_iter()

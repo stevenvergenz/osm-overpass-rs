@@ -16,6 +16,9 @@ pub use output::*;
 mod common;
 pub use common::*;
 
+mod recurse;
+pub use recurse::*;
+
 use crate::Set;
 use std::borrow::Cow;
 
@@ -29,6 +32,8 @@ pub enum SetBuilder<'a> {
     Union(UnionSetBuilder<'a>),
     /// Builds a difference set.
     Difference(DifferenceSetBuilder<'a>),
+    /// Builds a recursive set.
+    Recurse(RecurseSetBuilder<'a>),
 }
 
 impl<'a> SetBuilderCommon<'a> for SetBuilder<'a> {
@@ -38,6 +43,7 @@ impl<'a> SetBuilderCommon<'a> for SetBuilder<'a> {
             Self::Filter(f) => &mut f.0,
             Self::Union(u) => &mut u.0,
             Self::Difference(d) => &mut d.0,
+            Self::Recurse(r) => &mut r.0,
         }
     }
 }
@@ -48,6 +54,7 @@ impl<'a> Into<Set<'a>> for SetBuilder<'a> {
             Self::Filter(f) => f.into(),
             Self::Union(u) => u.into(),
             Self::Difference(d) => d.into(),
+            Self::Recurse(r) => r.into(),
         }
     }
 }
@@ -65,8 +72,8 @@ impl<'a> Into<Cow<'a, Set<'a>>> for &'a SetBuilder<'a> {
 }
 
 impl<'a> IntoIterator for SetBuilder<'a> {
-    type Item = SetBuilder<'a>;
-    type IntoIter = std::array::IntoIter<SetBuilder<'a>, 1>;
+    type Item = Self;
+    type IntoIter = std::array::IntoIter<Self::Item, 1>;
     fn into_iter(self) -> Self::IntoIter {
         [self].into_iter()
     }
@@ -78,6 +85,7 @@ impl<'a> AsRef<Set<'a>> for SetBuilder<'a> {
             Self::Filter(s) => s.as_ref(),
             Self::Union(s) => s.as_ref(),
             Self::Difference(d) => d.as_ref(),
+            Self::Recurse(r) => r.as_ref(),
         }
     }
 }
@@ -88,6 +96,7 @@ impl<'a> AsMut<Set<'a>> for SetBuilder<'a> {
             Self::Filter(s) => s.as_mut(),
             Self::Union(u) => u.as_mut(),
             Self::Difference(d) => d.as_mut(),
+            Self::Recurse(r) => r.as_mut(),
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    DifferenceSetBuilder, FilterSet, FilterSetBuilder, FilterType, OutputBuilder, Query, QueryBuilder, QueryOutput, Set, UnionSetBuilder
+    DifferenceSetBuilder, FilterSet, FilterSetBuilder, FilterType, OutputBuilder, Query, QueryBuilder, QueryOutput, RecurseSet, RecurseSetBuilder, Set, UnionSetBuilder
 };
 use std::{borrow::Cow, collections::HashSet};
 
@@ -21,7 +21,7 @@ where
     fn inner(&mut self) -> &mut Self::Inner;
 
     /// Create a new set with elements from this set that meet certain criteria.
-    fn filter(self, filter_type: FilterType) -> FilterSetBuilder<'a> {
+    fn filter_to(self, filter_type: FilterType) -> FilterSetBuilder<'a> {
         FilterSetBuilder(FilterSet {
             filter_type,
             inputs: HashSet::from([self.into()]),
@@ -42,6 +42,26 @@ where
         exclude: impl Into<Cow<'a, Set<'a>>>,
     ) -> DifferenceSetBuilder<'a> {
         DifferenceSetBuilder::new(self, exclude)
+    }
+
+    /// Return the set of elements referenced by an element in this set.
+    fn members(self) -> RecurseSetBuilder<'a> {
+        RecurseSetBuilder(RecurseSet::down(self).into())
+    }
+
+    /// Return the set of elements referenced by an element in this set, and members of any found relations.
+    fn members_deep(self) -> RecurseSetBuilder<'a> {
+        RecurseSetBuilder(RecurseSet::down_relations(self).into())
+    }
+
+    /// Return the set of elements that reference an element in this set.
+    fn memberships(self) -> RecurseSetBuilder<'a> {
+        RecurseSetBuilder(RecurseSet::up(self).into())
+    }
+
+    /// Return the set of elements that reference an element in this set, and relations who reference any found element.
+    fn memberships_deep(self) -> RecurseSetBuilder<'a> {
+        RecurseSetBuilder(RecurseSet::up_relations(self).into())
     }
 
     /// Start configuring output options for this set.
