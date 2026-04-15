@@ -16,8 +16,8 @@ pub use overpassql::*;
 mod namer;
 pub(crate) use namer::*;
 
-mod recurse;
-pub use recurse::*;
+mod recurse_filter;
+pub use recurse_filter::*;
 
 mod util;
 pub use util::*;
@@ -30,3 +30,6 @@ pub use output::*;
 
 mod difference;
 pub use difference::*;
+
+mod recurse_set;
+pub use recurse_set::*;

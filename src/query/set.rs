@@ -1,7 +1,7 @@
 #[cfg(doc)]
 use crate::Element;
 use crate::{
-    DifferenceSet, FilterSet, Namer, OverpassQLError, OverpassQLNamed, UnionSet,
+    DifferenceSet, FilterSet, Namer, OverpassQLError, OverpassQLNamed, RecurseSet, UnionSet
 };
 use std::{
     borrow::Cow,
@@ -21,6 +21,10 @@ pub enum Set<'a> {
     Union(UnionSet<'a>),
     /// The difference block statement. See [DifferenceSet].
     Difference(DifferenceSet<'a>),
+    RecurseDown(RecurseSet<'a, false, false>),
+    RecurseDownRelations(RecurseSet<'a, false, true>),
+    RecurseUp(RecurseSet<'a, true, false>),
+    RecurseUpRelations(RecurseSet<'a, true, true>),
     /// A string of raw OverpassQL that generates a set. May cause the query to not compile!
     Raw(String),
 }
@@ -44,6 +48,10 @@ impl<'a> OverpassQLNamed<'a> for Set<'a> {
             Self::Filter(filter) => filter.fmt_oql_named(f, namer)?,
             Self::Union(union) => union.fmt_oql_named(f, namer)?,
             Self::Difference(s) => s.fmt_oql_named(f, namer)?,
+            Self::RecurseDown(r) => r.fmt_oql_named(f, namer)?,
+            Self::RecurseDownRelations(r) => r.fmt_oql_named(f, namer)?,
+            Self::RecurseUp(r) => r.fmt_oql_named(f, namer)?,
+            Self::RecurseUpRelations(r) => r.fmt_oql_named(f, namer)?,
             Self::Raw(raw) => write!(f, "{raw}")?,
         };
 
@@ -60,6 +68,10 @@ impl<'a> Set<'a> {
             Self::Filter(s) => s.dependencies(),
             Self::Union(s) => s.dependencies(),
             Self::Difference(s) => s.dependencies(),
+            Self::RecurseDown(r) => r.dependencies(),
+            Self::RecurseDownRelations(r) => r.dependencies(),
+            Self::RecurseUp(r) => r.dependencies(),
+            Self::RecurseUpRelations(r) => r.dependencies(),
             Self::Raw(_) => HashSet::new().into_iter(),
         }
     }
@@ -107,3 +119,29 @@ impl<'a> From<DifferenceSet<'a>> for Set<'a> {
         Self::Difference(value)
     }
 }
+
+impl<'a> From<RecurseSet<'a, false, false>> for Set<'a> {
+    fn from(value: RecurseSet<'a, false, false>) -> Self {
+        Self::RecurseDown(value)
+    }
+}
+
+impl<'a> From<RecurseSet<'a, false, true>> for Set<'a> {
+    fn from(value: RecurseSet<'a, false, true>) -> Self {
+        Self::RecurseDownRelations(value)
+    }
+}
+
+impl<'a> From<RecurseSet<'a, true, false>> for Set<'a> {
+    fn from(value: RecurseSet<'a, true, false>) -> Self {
+        Self::RecurseUp(value)
+    }
+}
+
+impl<'a> From<RecurseSet<'a, true, true>> for Set<'a> {
+    fn from(value: RecurseSet<'a, true, true>) -> Self {
+
+        Self::RecurseUpRelations(value)
+    }
+}
+
