@@ -89,7 +89,6 @@ Evaluate the query via the default Overpass API server:
 #    .search_bbox(Bbox { north: 47.667, south: 47.553, east: -122.201, west: -122.461 })
 #    .into();
 # tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
-
 let res = OverpassServer::default().evaluate(&query).await.unwrap();
 
 // One of those landmarks should be the Space Needle.
@@ -128,10 +127,10 @@ assert!(
     * ❌ complete
     * ❌ retro
     * ❌ compare
-    * ❌ recurse up
-    * ❌ recurse up relations
-    * ❌ recurse down
-    * ❌ recurse down relations
+    * ✅ recurse up
+    * ✅ recurse up relations
+    * ✅ recurse down
+    * ✅ recurse down relations
     * ❌ is_in
     * ❌ timeline
     * ❌ local

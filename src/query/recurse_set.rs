@@ -21,19 +21,20 @@ pub enum RecurseSet<'a> {
 
 impl<'a> OverpassQLNamed<'a> for RecurseSet<'a> {
     fn fmt_oql_named<'b, 'c>(
-            &'b self,
-            f: &mut impl Write,
-            namer: &mut Namer<'a, 'c>,
-        ) -> Result<(), OverpassQLError>
-        where
-            'b: 'c {
-            match self {
-                Self::Down(s) => write!(f, ".{}>", namer.get(&s)),
-                Self::DownRelations(s) => write!(f, ".{}>>", namer.get(&s)),
-                Self::Up(s) => write!(f, ".{}<", namer.get(&s)),
-                Self::UpRelations(s) => write!(f, ".{}<<", namer.get(&s)),
-            }?;
-            Ok(())
+        &'b self,
+        f: &mut impl Write,
+        namer: &mut Namer<'a, 'c>,
+    ) -> Result<(), OverpassQLError>
+    where
+        'b: 'c,
+    {
+        match self {
+            Self::Down(s) => write!(f, ".{}>", namer.get(&s)),
+            Self::DownRelations(s) => write!(f, ".{}>>", namer.get(&s)),
+            Self::Up(s) => write!(f, ".{}<", namer.get(&s)),
+            Self::UpRelations(s) => write!(f, ".{}<<", namer.get(&s)),
+        }?;
+        Ok(())
     }
 }
 
@@ -69,7 +70,9 @@ impl<'a> RecurseSet<'a> {
     }
 
     /// The sets that must be defined before this set.
-    pub fn dependencies(&self) -> std::collections::hash_set::IntoIter<&Set<'a>> {
+    pub fn dependencies(
+        &self,
+    ) -> std::collections::hash_set::IntoIter<&Set<'a>> {
         HashSet::from([self.input()]).into_iter()
     }
 }
@@ -83,4 +86,3 @@ impl<'a> TryFrom<Set<'a>> for RecurseSet<'a> {
         }
     }
 }
-

@@ -1,5 +1,7 @@
 use crate::{
-    DifferenceSetBuilder, FilterSet, FilterSetBuilder, FilterType, OutputBuilder, Query, QueryBuilder, QueryOutput, RecurseSet, RecurseSetBuilder, Set, UnionSetBuilder
+    DifferenceSetBuilder, FilterSet, FilterSetBuilder, FilterType,
+    OutputBuilder, Query, QueryBuilder, QueryOutput, RecurseSetBuilder, Set,
+    SetBuilder, UnionSetBuilder,
 };
 use std::{borrow::Cow, collections::HashSet};
 
@@ -22,11 +24,14 @@ where
 
     /// Create a new set with elements from this set that meet certain criteria.
     fn filter_to(self, filter_type: FilterType) -> FilterSetBuilder<'a> {
-        FilterSetBuilder(FilterSet {
-            filter_type,
-            inputs: HashSet::from([self.into()]),
-            ..Default::default()
-        }.into())
+        FilterSetBuilder(
+            FilterSet {
+                filter_type,
+                inputs: HashSet::from([self.into()]),
+                ..Default::default()
+            }
+            .into(),
+        )
     }
     /// Create a new set with all elements from both this and another set.
     fn union_with(
@@ -45,23 +50,23 @@ where
     }
 
     /// Return the set of elements referenced by an element in this set.
-    fn members(self) -> RecurseSetBuilder<'a> {
-        RecurseSetBuilder(RecurseSet::down(self).into())
+    fn recurse_down(self) -> RecurseSetBuilder<'a> {
+        SetBuilder::recurse_down(self)
     }
 
     /// Return the set of elements referenced by an element in this set, and members of any found relations.
-    fn members_deep(self) -> RecurseSetBuilder<'a> {
-        RecurseSetBuilder(RecurseSet::down_relations(self).into())
+    fn recurse_down_relations(self) -> RecurseSetBuilder<'a> {
+        SetBuilder::recurse_down_relations(self)
     }
 
     /// Return the set of elements that reference an element in this set.
-    fn memberships(self) -> RecurseSetBuilder<'a> {
-        RecurseSetBuilder(RecurseSet::up(self).into())
+    fn recurse_up(self) -> RecurseSetBuilder<'a> {
+        SetBuilder::recurse_up(self)
     }
 
     /// Return the set of elements that reference an element in this set, and relations who reference any found element.
-    fn memberships_deep(self) -> RecurseSetBuilder<'a> {
-        RecurseSetBuilder(RecurseSet::up_relations(self).into())
+    fn recurse_up_relations(self) -> RecurseSetBuilder<'a> {
+        SetBuilder::recurse_up_relations(self)
     }
 
     /// Start configuring output options for this set.

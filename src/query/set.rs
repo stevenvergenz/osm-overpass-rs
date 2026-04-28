@@ -1,7 +1,8 @@
 #[cfg(doc)]
 use crate::Element;
 use crate::{
-    DifferenceSet, FilterSet, Namer, OverpassQLError, OverpassQLNamed, RecurseSet, UnionSet
+    DifferenceSet, FilterSet, Namer, OverpassQLError, OverpassQLNamed,
+    RecurseSet, UnionSet,
 };
 use std::{
     borrow::Cow,
@@ -117,4 +118,3 @@ impl<'a> From<RecurseSet<'a>> for Set<'a> {
         Self::Recurse(value)
     }
 }
-
